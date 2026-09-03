@@ -1,6 +1,6 @@
 # Lift Ledger
 
-A simple self-hosted application for tracking your weight lifting sessions.
+A minimalist self-hosted application for tracking your weight lifting sessions.
 
 ## Setup
 
