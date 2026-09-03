@@ -1,0 +1,26 @@
+{
+  "name": "lift-ledger",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0",
+    "@nuxthub/core": "0.10.8",
+    "@nuxtjs/better-auth": "0.2.4",
+    "better-auth": "^1.7.1",
+    "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2",
+    "nuxt": "^4.5.2",
+    "vue": "^3.5.42",
+    "vue-router": "^5.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
