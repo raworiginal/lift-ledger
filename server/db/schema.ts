@@ -55,7 +55,10 @@ export const exercises = sqliteTable(
       sql`${t.name} COLLATE NOCASE`,
       t.equipment,
     ),
-    check("exercises_movement_pattern_chk", sql`${t.movementPattern} IS NULL OR ${inPatterns(t.movementPattern)}`),
+    check(
+      "exercises_movement_pattern_chk",
+      sql`${t.movementPattern} IS NULL OR ${inPatterns(t.movementPattern)}`,
+    ),
   ],
 );
 
@@ -68,7 +71,10 @@ export const routines = sqliteTable(
     notes: text("notes"),
   },
   (t) => [
-    uniqueIndex("routines_user_name_uidx").on(t.userId, sql`${t.name} COLLATE NOCASE`),
+    uniqueIndex("routines_user_name_uidx").on(
+      t.userId,
+      sql`${t.name} COLLATE NOCASE`,
+    ),
   ],
 );
 
@@ -88,13 +94,19 @@ export const routineItems = sqliteTable(
     notes: text("notes"),
   },
   (t) => [
-    uniqueIndex("routine_items_routine_position_uidx").on(t.routineId, t.position),
+    uniqueIndex("routine_items_routine_position_uidx").on(
+      t.routineId,
+      t.position,
+    ),
     check("routine_items_position_chk", sql`${t.position} >= 0`),
     check(
       "routine_items_slot_chk",
       sql`(${t.movementPattern} IS NULL) <> (${t.exerciseId} IS NULL)`,
     ),
-    check("routine_items_movement_pattern_chk", sql`${t.movementPattern} IS NULL OR ${inPatterns(t.movementPattern)}`),
+    check(
+      "routine_items_movement_pattern_chk",
+      sql`${t.movementPattern} IS NULL OR ${inPatterns(t.movementPattern)}`,
+    ),
   ],
 );
 
@@ -133,7 +145,10 @@ export const workoutExercises = sqliteTable(
     notes: text("notes"),
   },
   (t) => [
-    uniqueIndex("workout_exercises_workout_position_uidx").on(t.workoutId, t.position),
+    uniqueIndex("workout_exercises_workout_position_uidx").on(
+      t.workoutId,
+      t.position,
+    ),
     check("workout_exercises_position_chk", sql`${t.position} >= 0`),
   ],
 );
@@ -153,10 +168,19 @@ export const workoutSets = sqliteTable(
     notes: text("notes"),
   },
   (t) => [
-    uniqueIndex("workout_sets_exercise_position_uidx").on(t.workoutExerciseId, t.position),
+    uniqueIndex("workout_sets_exercise_position_uidx").on(
+      t.workoutExerciseId,
+      t.position,
+    ),
     check("workout_sets_position_chk", sql`${t.position} >= 0`),
     check("workout_sets_reps_chk", sql`${t.reps} > 0`),
-    check("workout_sets_side_chk", sql`${t.side} IS NULL OR ${t.side} IN ('left', 'right')`),
-    check("workout_sets_rir_chk", sql`${t.rir} IS NULL OR ${t.rir} BETWEEN 0 AND 10`),
+    check(
+      "workout_sets_side_chk",
+      sql`${t.side} IS NULL OR ${t.side} IN ('left', 'right')`,
+    ),
+    check(
+      "workout_sets_rir_chk",
+      sql`${t.rir} IS NULL OR ${t.rir} BETWEEN 0 AND 10`,
+    ),
   ],
 );
