@@ -15,6 +15,13 @@
       "when": 1788469820644,
       "tag": "0001_wet_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788470806183,
+      "tag": "0002_seed_exercise_catalog",
+      "breakpoints": true
     }
   ]
 }
