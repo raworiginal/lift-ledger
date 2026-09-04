@@ -2,7 +2,7 @@
 import { validateAuthForm } from "../utils/auth-validation.mjs";
 
 const emit = defineEmits(["switch-to-signup"]);
-const email = ref("");
+const identifier = ref("");
 const password = ref("");
 const pending = ref(false);
 const error = ref("");
@@ -10,8 +10,7 @@ const error = ref("");
 const submit = async () => {
   error.value = validateAuthForm({
     mode: "sign-in",
-    name: "",
-    email: email.value,
+    identifier: identifier.value,
     password: password.value,
   });
   if (error.value) return;
@@ -24,11 +23,17 @@ const submit = async () => {
 
   pending.value = true;
   try {
-    const result = await authClient.signIn.email({
-      email: email.value,
-      password: password.value,
-      callbackURL: "/app",
-    });
+    const result = identifier.value.includes("@")
+      ? await authClient.signIn.email({
+          email: identifier.value,
+          password: password.value,
+          callbackURL: "/app",
+        })
+      : await authClient.signIn.username({
+          username: identifier.value,
+          password: password.value,
+          callbackURL: "/app",
+        });
 
     if (result.error) {
       error.value = result.error.message || "Authentication failed.";
@@ -50,14 +55,14 @@ const submit = async () => {
     <legend class="fieldset-legend">Login</legend>
 
     <form class="space-y-2" @submit.prevent="submit">
-      <label class="label" for="login-email">Email</label>
+      <label class="label" for="login-identifier">Username or email</label>
       <input
-        v-model="email"
+        v-model="identifier"
         class="input w-full"
-        id="login-email"
-        type="email"
-        placeholder="Email"
-        autocomplete="email"
+        id="login-identifier"
+        type="text"
+        placeholder="Username or email"
+        autocomplete="username"
         required
       />
 

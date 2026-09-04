@@ -2,7 +2,7 @@
 import { validateAuthForm } from "../utils/auth-validation.mjs";
 
 const emit = defineEmits(["switch-to-login"]);
-const name = ref("");
+const username = ref("");
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
@@ -12,7 +12,7 @@ const error = ref("");
 const submit = async () => {
   error.value = validateAuthForm({
     mode: "sign-up",
-    name: name.value,
+    username: username.value,
     email: email.value,
     password: password.value,
     confirmPassword: confirmPassword.value,
@@ -28,7 +28,7 @@ const submit = async () => {
   pending.value = true;
   try {
     const result = await authClient.signUp.email({
-      name: name.value,
+      username: username.value,
       email: email.value,
       password: password.value,
       callbackURL: "/app",
@@ -54,14 +54,14 @@ const submit = async () => {
     <legend class="fieldset-legend">Sign up</legend>
 
     <form class="space-y-2" @submit.prevent="submit">
-      <label class="label" for="signup-name">Name</label>
+      <label class="label" for="signup-username">Username</label>
       <input
-        v-model="name"
+        v-model="username"
         class="input w-full"
-        id="signup-name"
+        id="signup-username"
         type="text"
-        placeholder="Name"
-        autocomplete="name"
+        placeholder="Username"
+        autocomplete="username"
         required
       />
 
