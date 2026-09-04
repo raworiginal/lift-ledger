@@ -28,9 +28,9 @@ before(async () => {
   await db.execute("INSERT INTO routines (id, user_id, name) VALUES (1, 'u1', 'Push')");
 });
 
-test("user.weightUnit defaults to kg", async () => {
+test("user.weightUnit defaults to lb", async () => {
   const { rows } = await db.execute("SELECT weightUnit FROM user WHERE id = 'u1'");
-  assert.equal(rows[0].weightUnit, "kg");
+  assert.equal(rows[0].weightUnit, "lb");
 });
 
 test("the exercise catalog covers every movement pattern", async () => {

@@ -4,7 +4,7 @@ export default defineServerAuth((_ctx) => ({
   emailAndPassword: { enabled: true },
   user: {
     additionalFields: {
-      weightUnit: { type: "string", defaultValue: "kg", input: true },
+      weightUnit: { type: "string", defaultValue: "lb", input: true },
     },
   },
 }));
