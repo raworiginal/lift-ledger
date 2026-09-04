@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  css: ["~/assets/css/main.css"],
   auth: {
     redirects: {
       login: "/login",
