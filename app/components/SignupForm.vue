@@ -1,18 +1,21 @@
 <script setup>
 import { validateAuthForm } from "../utils/auth-validation.mjs";
 
-const emit = defineEmits(["switch-to-signup"]);
+const emit = defineEmits(["switch-to-login"]);
+const name = ref("");
 const email = ref("");
 const password = ref("");
+const confirmPassword = ref("");
 const pending = ref(false);
 const error = ref("");
 
 const submit = async () => {
   error.value = validateAuthForm({
-    mode: "sign-in",
-    name: "",
+    mode: "sign-up",
+    name: name.value,
     email: email.value,
     password: password.value,
+    confirmPassword: confirmPassword.value,
   });
   if (error.value) return;
 
@@ -24,7 +27,8 @@ const submit = async () => {
 
   pending.value = true;
   try {
-    const result = await authClient.signIn.email({
+    const result = await authClient.signUp.email({
+      name: name.value,
       email: email.value,
       password: password.value,
       callbackURL: "/app",
@@ -47,28 +51,51 @@ const submit = async () => {
 
 <template>
   <fieldset class="fieldset w-full max-w-sm rounded-box border border-base-300 bg-base-200 p-4">
-    <legend class="fieldset-legend">Login</legend>
+    <legend class="fieldset-legend">Sign up</legend>
 
     <form class="space-y-2" @submit.prevent="submit">
-      <label class="label" for="login-email">Email</label>
+      <label class="label" for="signup-name">Name</label>
+      <input
+        v-model="name"
+        class="input w-full"
+        id="signup-name"
+        type="text"
+        placeholder="Name"
+        autocomplete="name"
+        required
+      />
+
+      <label class="label" for="signup-email">Email</label>
       <input
         v-model="email"
         class="input w-full"
-        id="login-email"
+        id="signup-email"
         type="email"
         placeholder="Email"
         autocomplete="email"
         required
       />
 
-      <label class="label" for="login-password">Password</label>
+      <label class="label" for="signup-password">Password</label>
       <input
         v-model="password"
         class="input w-full"
-        id="login-password"
+        id="signup-password"
         type="password"
         placeholder="Password"
-        autocomplete="current-password"
+        autocomplete="new-password"
+        minlength="8"
+        required
+      />
+
+      <label class="label" for="signup-confirm-password">Confirm password</label>
+      <input
+        v-model="confirmPassword"
+        class="input w-full"
+        id="signup-confirm-password"
+        type="password"
+        placeholder="Confirm password"
+        autocomplete="new-password"
         minlength="8"
         required
       />
@@ -79,12 +106,12 @@ const submit = async () => {
 
       <button class="btn btn-neutral mt-4 w-full" type="submit" :disabled="pending">
         <span v-if="pending" class="loading loading-spinner loading-sm" />
-        {{ pending ? "Signing in..." : "Sign in" }}
+        {{ pending ? "Creating account..." : "Create account" }}
       </button>
     </form>
 
-    <button class="btn btn-link btn-sm self-center" type="button" @click="emit('switch-to-signup')">
-      Need an account? Sign up
+    <button class="btn btn-link btn-sm self-center" type="button" @click="emit('switch-to-login')">
+      Already have an account? Sign in
     </button>
   </fieldset>
 </template>

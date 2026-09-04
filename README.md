@@ -11,6 +11,10 @@ Make sure to install dependencies:
 pnpm install
 ```
 
+### First-Run Admin
+
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` to create or promote the admin on startup. `ADMIN_NAME` sets the name for a newly created admin. Existing passwords are preserved, and removing the bootstrap variables disables this behavior on later starts.
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:
