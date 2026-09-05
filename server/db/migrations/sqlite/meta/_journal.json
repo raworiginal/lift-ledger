@@ -22,6 +22,13 @@
       "when": 1788470806183,
       "tag": "0002_seed_exercise_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1788538714549,
+      "tag": "0003_flippant_the_phantom",
+      "breakpoints": true
     }
   ]
 }
