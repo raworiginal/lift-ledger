@@ -4,7 +4,7 @@ const mode = ref("sign-in");
 
 <template>
   <div class="hero flex-1">
-    <div class="hero-content text-center">
+    <div class="hero-content">
       <div class="flex w-full max-w-md flex-col items-center gap-6">
         <h1 class="mt-2 text-5xl font-bold tracking-tight">Lift Ledger</h1>
         <LoginForm

@@ -51,7 +51,9 @@ const submit = async () => {
 </script>
 
 <template>
-  <fieldset class="fieldset w-full max-w-sm rounded-box border border-base-300 bg-base-200 p-4">
+  <fieldset
+    class="fieldset w-full max-w-sm rounded-box border border-base-300 bg-base-200 p-4"
+  >
     <legend class="fieldset-legend">Login</legend>
 
     <form class="space-y-2" @submit.prevent="submit">
@@ -82,13 +84,21 @@ const submit = async () => {
         <span>{{ error }}</span>
       </div>
 
-      <button class="btn btn-neutral mt-4 w-full" type="submit" :disabled="pending">
+      <button
+        class="btn btn-neutral mt-4 w-full"
+        type="submit"
+        :disabled="pending"
+      >
         <span v-if="pending" class="loading loading-spinner loading-sm" />
         {{ pending ? "Signing in..." : "Sign in" }}
       </button>
     </form>
 
-    <button class="btn btn-link btn-sm self-center" type="button" @click="emit('switch-to-signup')">
+    <button
+      class="btn btn-link btn-sm self-center"
+      type="button"
+      @click="emit('switch-to-signup')"
+    >
       Need an account? Sign up
     </button>
   </fieldset>
