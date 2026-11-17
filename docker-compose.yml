@@ -1,6 +1,6 @@
 services:
   db:
-    container_name: "ProjectDB"
+    container_name: "lift-ledger-db"
     image: postgres:17-alpine
     volumes:
       - "./.database/postgres-data:/var/lib/postgresql/data:rw"

@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1794609422648,
-      "tag": "0000_happy_major_mapleleaf",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1794618527382,
-      "tag": "0001_complete_kabuki",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1794618859004,
-      "tag": "0002_tiresome_ronan",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1794619171440,
-      "tag": "0003_amusing_living_lightning",
+      "when": 1794954668572,
+      "tag": "0000_vengeful_argent",
       "breakpoints": true
     }
   ]
