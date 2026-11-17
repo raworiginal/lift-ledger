@@ -1,0 +1,69 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme {
+  --font-sans: "Roboto", sans-serif;
+}
+
+@theme static {
+  --color-cobalt-50: oklch(95.3% 0.022 260.723);
+  --color-cobalt-100: oklch(90.8% 0.045 258.763);
+  --color-cobalt-200: oklch(81.6% 0.091 257.776);
+  --color-cobalt-300: oklch(72.9% 0.14 258.068);
+  --color-cobalt-400: oklch(64.7% 0.186 258.256);
+  --color-cobalt-500: oklch(57.8% 0.228 260.025);
+  --color-cobalt-600: oklch(49.2% 0.19 259.799);
+  --color-cobalt-700: oklch(40.2% 0.152 259.656);
+  --color-cobalt-800: oklch(30.7% 0.109 258.934);
+  --color-cobalt-900: oklch(20.4% 0.063 257.52);
+  --color-cobalt-950: oklch(14.7% 0.037 249.929);
+  --color-cobalt-gray-50: oklch(99.1% 0 0);
+  --color-cobalt-gray-100: oklch(98.2% 0.002 247.839);
+  --color-cobalt-gray-200: oklch(94.2% 0.005 247.879);
+  --color-cobalt-gray-300: oklch(91.1% 0.007 247.901);
+  --color-cobalt-gray-400: oklch(86.7% 0.011 247.949);
+  --color-cobalt-gray-500: oklch(76.9% 0.015 248.017);
+  --color-cobalt-gray-600: oklch(55.8% 0.016 244.893);
+  --color-cobalt-gray-700: oklch(42.8% 0.015 248.172);
+  --color-cobalt-gray-800: oklch(34.5% 0.013 248.212);
+  --color-cobalt-gray-900: oklch(26.2% 0.009 248.19);
+  --color-cobalt-gray-950: oklch(20.7% 0.008 248.192);
+}
+
+:root {
+  --ui-radius: 0.125rem;
+}
+
+:root,
+.light {
+  --ui-secondary: var(--ui-color-secondary-600);
+  --ui-bg: var(--ui-color-neutral-100);
+  --ui-bg-muted: var(--ui-color-neutral-200);
+  --ui-bg-elevated: var(--ui-color-neutral-200);
+  --ui-bg-accented: var(--ui-color-neutral-300);
+  --ui-text-dimmed: var(--ui-color-neutral-600);
+  --ui-text-muted: var(--ui-color-neutral-600);
+  --ui-text-toned: var(--ui-color-neutral-700);
+  --ui-text: var(--ui-color-neutral-800);
+  --ui-border: var(--ui-color-neutral-400);
+  --ui-border-muted: var(--ui-color-neutral-300);
+}
+
+.dark {
+  --ui-primary: var(--ui-color-primary-500);
+  --ui-secondary: var(--ui-color-secondary-500);
+  --ui-success: var(--ui-color-success-500);
+  --ui-info: var(--ui-color-info-500);
+  --ui-warning: var(--ui-color-warning-500);
+  --ui-error: var(--ui-color-error-500);
+  --ui-bg-muted: var(--ui-color-neutral-700);
+  --ui-text: var(--ui-color-neutral-300);
+  --ui-bg: var(--ui-color-neutral-900);
+  --ui-bg-elevated: var(--ui-color-neutral-800);
+  --ui-bg-accented: var(--ui-color-neutral-700);
+  --ui-text-dimmed: var(--ui-color-neutral-500);
+  --ui-text-muted: var(--ui-color-neutral-400);
+  --ui-text-toned: var(--ui-color-neutral-300);
+  --ui-border: var(--ui-color-neutral-800);
+  --ui-border-muted: var(--ui-color-neutral-700);
+}

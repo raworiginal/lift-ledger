@@ -1,0 +1,9 @@
+.git
+.nuxt
+.output
+.node_modules
+node_modules
+.database
+pnpm-lock.yaml
+README.md
+server/db/migrations/**/meta/*.json

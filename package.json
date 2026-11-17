@@ -1,0 +1,45 @@
+{
+  "name": "nuxt-auth-template",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "lint": "pnpm dlx prettier@3.6.2 --check app layers scripts server tests .github/workflows/*.yml .prettierrc.json package.json pnpm-workspace.yaml tsconfig.json nuxt.config.ts",
+    "format": "pnpm dlx prettier@3.6.2 --write app layers scripts server tests .github/workflows/*.yml .prettierrc.json package.json pnpm-workspace.yaml tsconfig.json nuxt.config.ts",
+    "format:check": "pnpm dlx prettier@3.6.2 --check app layers scripts server tests .github/workflows/*.yml .prettierrc.json package.json pnpm-workspace.yaml tsconfig.json nuxt.config.ts",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "test": "tsx --test tests/*.test.ts tests/server/api/admin/*.test.ts",
+    "typecheck": "nuxt typecheck",
+    "db:generate": "nuxt db generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "auth:setup": "tsx scripts/setup-admin.ts",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/ui": "^4.12.0",
+    "@nuxthub/core": "0.10.12",
+    "@nuxtjs/better-auth": "0.3.16",
+    "better-auth": "1.7.18",
+    "dotenv": "^18.0.4",
+    "drizzle-kit": "0.31.11",
+    "drizzle-orm": "0.45.4",
+    "nuxt": "^4.6.4",
+    "postgres": "^3.4.9",
+    "tailwindcss": "^4.3.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@iconify-json/bi": "^1.2.7",
+    "@iconify-json/lucide": "^1.2.154",
+    "@types/node": "26.6.3",
+    "auth": "1.7.18",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.14"
+  },
+  "engines": {
+    "node": "^22.19.0 || ^24.11.0 || >=26.0.0"
+  }
+}
