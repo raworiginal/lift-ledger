@@ -1,0 +1,1 @@
+CREATE INDEX "exercises_body_part_idx" ON "exercises" USING btree ("body_part");

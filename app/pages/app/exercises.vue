@@ -40,7 +40,9 @@ type ExerciseAlternativesResponse = {
 };
 
 type FilterOptions = {
+  bodyParts: string[];
   categories: string[];
+  equipment: string[];
   forceTypes: string[];
   mechanics: string[];
   muscles: MuscleOption[];
@@ -48,6 +50,8 @@ type FilterOptions = {
 
 const filters = reactive({
   search: "",
+  bodyPart: "",
+  equipment: "",
   muscle: "",
   muscleRole: "any",
   forceType: "",
@@ -59,6 +63,8 @@ const filters = reactive({
 
 const query = computed(() => ({
   search: filters.search.trim() || undefined,
+  bodyPart: filters.bodyPart || undefined,
+  equipment: filters.equipment || undefined,
   muscle: filters.muscle || undefined,
   muscleRole: filters.muscleRole,
   forceType: filters.forceType || undefined,
@@ -81,7 +87,9 @@ const { data: filterOptions } = await useFetch<FilterOptions>(
   "/api/exercises/filters",
   {
     default: () => ({
+      bodyParts: [],
       categories: [],
+      equipment: [],
       forceTypes: [],
       mechanics: [],
       muscles: [],
@@ -92,6 +100,8 @@ const { data: filterOptions } = await useFetch<FilterOptions>(
 watch(
   () => [
     filters.search,
+    filters.bodyPart,
+    filters.equipment,
     filters.muscle,
     filters.muscleRole,
     filters.forceType,
@@ -171,7 +181,7 @@ function pageForward() {
 
       <section
         aria-label="Exercise filters"
-        class="grid gap-4 rounded-lg border border-muted bg-elevated p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7"
+        class="grid gap-4 rounded-lg border border-muted bg-elevated p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9"
       >
         <label class="grid min-w-0 gap-1.5 text-sm xl:col-span-2">
           <span class="font-medium text-highlighted">Search</span>
@@ -181,6 +191,40 @@ function pageForward() {
             placeholder="Name or description"
             class="w-full min-w-0 rounded-md border border-default bg-default px-3 py-2 text-default"
           />
+        </label>
+
+        <label class="grid min-w-0 gap-1.5 text-sm">
+          <span class="font-medium text-highlighted">Equipment</span>
+          <select
+            v-model="filters.equipment"
+            class="w-full min-w-0 rounded-md border border-default bg-default px-3 py-2 text-default"
+          >
+            <option value="">Any equipment</option>
+            <option
+              v-for="equipment in filterOptions.equipment"
+              :key="equipment"
+              :value="equipment"
+            >
+              {{ readable(equipment) }}
+            </option>
+          </select>
+        </label>
+
+        <label class="grid min-w-0 gap-1.5 text-sm">
+          <span class="font-medium text-highlighted">Body part</span>
+          <select
+            v-model="filters.bodyPart"
+            class="w-full min-w-0 rounded-md border border-default bg-default px-3 py-2 text-default"
+          >
+            <option value="">Any body part</option>
+            <option
+              v-for="bodyPart in filterOptions.bodyParts"
+              :key="bodyPart"
+              :value="bodyPart"
+            >
+              {{ readable(bodyPart) }}
+            </option>
+          </select>
         </label>
 
         <label class="grid min-w-0 gap-1.5 text-sm">

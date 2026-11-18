@@ -54,6 +54,7 @@ export const exercises = pgTable(
     index("exercises_category_idx").on(table.category),
     index("exercises_force_type_idx").on(table.forceType),
     index("exercises_mechanic_idx").on(table.mechanic),
+    index("exercises_body_part_idx").on(table.bodyPart),
   ],
 );
 

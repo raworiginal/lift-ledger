@@ -15,6 +15,13 @@
       "when": 1794958510531,
       "tag": "0001_neat_wilson_fisk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794969962490,
+      "tag": "0002_optimal_the_twelve",
+      "breakpoints": true
     }
   ]
 }

@@ -109,8 +109,32 @@ export const exerciseDatasetSchema = z
 export type ExerciseSeed = z.infer<typeof exerciseSeedSchema>;
 export type ExerciseDataset = z.infer<typeof exerciseDatasetSchema>;
 
+export const exerciseBodyPartFilters = [
+  "arms",
+  "back",
+  "chest",
+  "core",
+  "full_body",
+  "lower_legs",
+  "shoulders",
+  "upper_legs",
+] as const;
+
+export type ExerciseBodyPartFilter = (typeof exerciseBodyPartFilters)[number];
+
+export function exerciseBodyPartValues(
+  bodyPart: ExerciseBodyPartFilter,
+): readonly string[] {
+  return bodyPart === "arms" ? ["upper_arms", "lower_arms"] : [bodyPart];
+}
+
 export const exerciseListQuerySchema = z.object({
   search: z.string().trim().max(100).optional(),
+  bodyPart: z.enum(exerciseBodyPartFilters).optional(),
+  equipment: z
+    .string()
+    .regex(/^[a-z0-9_]+$/)
+    .optional(),
   muscle: z
     .string()
     .regex(/^[a-z0-9_]+$/)

@@ -11,7 +11,10 @@ import {
 } from "drizzle-orm";
 import { db } from "@nuxthub/db";
 import { exerciseMuscles, exercises, muscles } from "../../db/schema/exercises";
-import { exerciseListQuerySchema } from "../../utils/exercises";
+import {
+  exerciseBodyPartValues,
+  exerciseListQuerySchema,
+} from "../../utils/exercises";
 
 export default defineEventHandler(async (event) => {
   setResponseHeader(event as never, "cache-control", "private, no-store");
@@ -36,6 +39,16 @@ export default defineEventHandler(async (event) => {
       ilike(exercises.descriptionEn, searchPattern),
     );
     if (searchCondition) conditions.push(searchCondition);
+  }
+
+  if (filters.bodyPart) {
+    conditions.push(
+      inArray(exercises.bodyPart, exerciseBodyPartValues(filters.bodyPart)),
+    );
+  }
+
+  if (filters.equipment) {
+    conditions.push(eq(exercises.equipment, filters.equipment));
   }
 
   if (filters.category) {

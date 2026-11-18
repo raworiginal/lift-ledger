@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
+  exerciseBodyPartValues,
   exerciseDatasetSchema,
   exerciseListQuerySchema,
   publicExerciseImagePath,
@@ -57,6 +58,8 @@ test("exercise filters default pagination and accept combined filter values", ()
   assert.deepEqual(
     exerciseListQuerySchema.parse({
       search: "  bench press  ",
+      bodyPart: "arms",
+      equipment: "barbell",
       muscle: "pectoralis_major",
       muscleRole: "primary",
       forceType: "push",
@@ -67,6 +70,8 @@ test("exercise filters default pagination and accept combined filter values", ()
     }),
     {
       search: "bench press",
+      bodyPart: "arms",
+      equipment: "barbell",
       muscle: "pectoralis_major",
       muscleRole: "primary",
       forceType: "push",
@@ -88,6 +93,14 @@ test("exercise filters reject invalid values and unbounded pagination", () => {
     false,
   );
   assert.equal(
+    exerciseListQuerySchema.safeParse({ bodyPart: "legs" }).success,
+    false,
+  );
+  assert.equal(
+    exerciseListQuerySchema.safeParse({ equipment: "Olympic bar" }).success,
+    false,
+  );
+  assert.equal(
     exerciseListQuerySchema.safeParse({ limit: "500" }).success,
     false,
   );
@@ -95,6 +108,14 @@ test("exercise filters reject invalid values and unbounded pagination", () => {
     exerciseListQuerySchema.safeParse({ search: "x".repeat(101) }).success,
     false,
   );
+});
+
+test("arms body-part filter matches upper and lower arms", () => {
+  assert.deepEqual(exerciseBodyPartValues("arms"), [
+    "upper_arms",
+    "lower_arms",
+  ]);
+  assert.deepEqual(exerciseBodyPartValues("chest"), ["chest"]);
 });
 
 test("similar exercise ranking favors shared primary muscles and same variation", () => {
