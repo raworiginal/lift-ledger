@@ -9,6 +9,13 @@ const shortcuts = computed(() => [
     to: "/app/notes",
   },
   {
+    title: "Exercise catalog",
+    description:
+      "Browse exercises, filter by training targets, and find alternatives.",
+    icon: "i-lucide-dumbbell",
+    to: "/app/exercises",
+  },
+  {
     title: "Your profile",
     description: "Update your personal details and manage sign-in methods.",
     icon: "i-lucide-user-round-cog",

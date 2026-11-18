@@ -8,6 +8,13 @@
       "when": 1794954668572,
       "tag": "0000_vengeful_argent",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794958510531,
+      "tag": "0001_neat_wilson_fisk",
+      "breakpoints": true
     }
   ]
 }

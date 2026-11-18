@@ -109,6 +109,18 @@ pnpm auth:setup   # Prepare Nuxt, apply migrations, and create the initial admin
 
 Keep `.env` and production credentials out of source control. Use a secret manager and a managed PostgreSQL database such as Neon for hosted deployments.
 
+## Exercise catalog
+
+The exercise catalog is stored in PostgreSQL and seeded from the version-controlled `data/seed/exercises.json` file. After applying migrations, import or refresh it with:
+
+```sh
+pnpm db:seed:exercises
+```
+
+The importer validates the dataset and local image assets, then safely upserts exercises and muscles. Exercise images remain in `public/images/exercises/`; the importer converts the dataset's `images/flat/` references to public URL paths. The authenticated catalog endpoints are `GET /api/exercises`, `GET /api/exercises/filters`, and `GET /api/exercises/:id/alternatives`.
+
+The dataset header refers to `LICENSE-DATA.md`; this workspace includes `LICENSE.md`, whose stated scope covers the free-tier exercise data and images. Keep the applicable license with the project and follow its attribution and in-app-use terms. The catalog page displays the required RepDB credit.
+
 ## Checks
 
 ```sh
