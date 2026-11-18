@@ -1,6 +1,13 @@
 {
   "version": 2,
   "skills": {
+    "container-presentational": {
+      "source": "PatternsDev/skills",
+      "commit": "48bf58a488cd210bcfad280b09c3a00403964d9d",
+      "sourceType": "github",
+      "skillPath": "vue/container-presentational/SKILL.md",
+      "computedHash": "dd13dc727a2d01e8725c12c2dccf9d396f133029654717d1416c7d535359133d"
+    },
     "nuxt-better-auth": {
       "source": "better-auth.nuxt.dev",
       "sourceUrl": "https://better-auth.nuxt.dev/",

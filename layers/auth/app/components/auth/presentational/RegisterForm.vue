@@ -4,6 +4,7 @@ import type { RegisterFormData, SocialProvider } from "#shared/auth/types/auth";
 import { registerSchema } from "#shared/auth/schemas/auth";
 
 const props = defineProps<{
+  authMode: string;
   loading: boolean;
   error: string | null;
   socialProviders: SocialProvider[];
@@ -61,7 +62,42 @@ function handleSubmit(event: FormSubmitEvent<RegisterFormData>) {
 </script>
 
 <template>
-  <UPageCard>
+  <div
+    v-if="props.authMode === 'social-only'"
+    class="mx-auto w-full max-w-lg space-y-4"
+  >
+    <UPageCard>
+      <div class="space-y-2 text-center">
+        <h1 class="text-xl font-semibold">Create your account</h1>
+        <p class="text-sm text-muted">
+          Continue with a social provider to sign in or register.
+        </p>
+      </div>
+      <div class="mt-6 space-y-3">
+        <UButton
+          v-for="provider in props.socialProviders"
+          :key="provider"
+          block
+          color="neutral"
+          variant="outline"
+          :loading="props.socialLoading"
+          :disabled="props.socialLoading"
+          @click="emit('socialSignIn', provider)"
+        >
+          Continue with {{ provider === "google" ? "Google" : "GitHub" }}
+        </UButton>
+      </div>
+      <UAlert
+        v-if="props.socialError"
+        class="mt-4"
+        color="error"
+        variant="subtle"
+        role="alert"
+        :description="props.socialError"
+      />
+    </UPageCard>
+  </div>
+  <UPageCard v-else>
     <UAuthForm
       title="Register"
       :fields="fields"

@@ -4,8 +4,8 @@ import { getSafeLocalRedirect } from "../layers/auth/shared/auth/redirect";
 
 test("local callback paths and query strings are preserved", () => {
   assert.equal(
-    getSafeLocalRedirect("/app/notes?sort=recent#top"),
-    "/app/notes?sort=recent#top",
+    getSafeLocalRedirect("/app/exercises?sort=recent#top"),
+    "/app/exercises?sort=recent#top",
   );
 });
 

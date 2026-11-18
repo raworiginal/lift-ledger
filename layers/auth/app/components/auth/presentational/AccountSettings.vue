@@ -1,8 +1,22 @@
 <script setup lang="ts">
 import type { SocialProvider } from "#shared/auth/types/auth";
 
-const { user } = useUserSession();
+type LinkedAccount = {
+  id: string;
+  providerId: string;
+  accountId: string;
+};
+
+type UserSession = {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  userAgent: string | null;
+  current: boolean;
+};
+
 const {
+  userEmail,
   accounts,
   sessions,
   providers,
@@ -13,13 +27,29 @@ const {
   actionError,
   successMessage,
   hasPassword,
-  load,
-  linkAccount,
-  unlinkAccount,
-  revokeSession,
-  revokeOtherSessions,
   deleteAccount,
-} = useAccountSettings();
+} = defineProps<{
+  userEmail: string;
+  accounts: LinkedAccount[];
+  sessions: UserSession[];
+  providers: SocialProvider[];
+  loading: boolean;
+  action: boolean;
+  deleting: boolean;
+  loadError: string | null;
+  actionError: string | null;
+  successMessage: string | null;
+  hasPassword: boolean;
+  deleteAccount: (password?: string) => Promise<void>;
+}>();
+
+const emit = defineEmits<{
+  linkAccount: [provider: SocialProvider];
+  unlinkAccount: [accountId: string];
+  revokeSession: [sessionId: string];
+  revokeOtherSessions: [];
+  clearActionError: [];
+}>();
 
 const confirmingUnlink = ref<string | null>(null);
 const confirmingSession = ref<string | null>(null);
@@ -30,11 +60,8 @@ const deletePassword = ref("");
 
 const canDelete = computed(
   () =>
-    confirmationEmail.value.trim().toLowerCase() ===
-    user.value?.email.toLowerCase(),
+    confirmationEmail.value.trim().toLowerCase() === userEmail.toLowerCase(),
 );
-
-onMounted(load);
 
 function providerLabel(provider: string) {
   return provider === "credential"
@@ -48,17 +75,33 @@ function formatDate(value: string) {
 
 function beginDelete() {
   confirmDelete.value = true;
-  actionError.value = null;
+  emit("clearActionError");
 }
 
 async function handleDelete() {
   if (!canDelete.value) return;
-  await deleteAccount(hasPassword.value ? deletePassword.value : undefined);
+  await deleteAccount(hasPassword ? deletePassword.value : undefined);
   deletePassword.value = "";
 }
 
 function providerIsLinked(provider: SocialProvider) {
-  return accounts.value.some((account) => account.providerId === provider);
+  return accounts.some((account) => account.providerId === provider);
+}
+
+function linkAccount(provider: SocialProvider) {
+  emit("linkAccount", provider);
+}
+
+function unlinkAccount(accountId: string) {
+  emit("unlinkAccount", accountId);
+}
+
+function revokeSession(sessionId: string) {
+  emit("revokeSession", sessionId);
+}
+
+function revokeOtherSessions() {
+  emit("revokeOtherSessions");
 }
 </script>
 
