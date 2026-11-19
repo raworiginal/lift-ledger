@@ -20,6 +20,27 @@
       "sourceType": "github",
       "skillPath": "skills/nuxt-ui/SKILL.md",
       "computedHash": "89a36be1af44314309cc668fab6294b566393e282e2526fa03c6dbc9ca9f2779"
+    },
+    "nuxthub": {
+      "source": "onmax/nuxt-skills",
+      "commit": "db72bd04fdae7f404532a4c9904df3a21690853e",
+      "sourceType": "github",
+      "skillPath": "skills/nuxthub/SKILL.md",
+      "computedHash": "19f206e4cc0da12025e1fe5d8ba2150d92b0027aa60421e9ba83c86066313598"
+    },
+    "vue": {
+      "source": "onmax/nuxt-skills",
+      "commit": "db72bd04fdae7f404532a4c9904df3a21690853e",
+      "sourceType": "github",
+      "skillPath": "skills/vue/SKILL.md",
+      "computedHash": "5133e6157dbc1a81078161932924f96dbad0213108f3b311ceb449c1efb95018"
+    },
+    "vue-best-practices": {
+      "source": "onmax/nuxt-skills",
+      "commit": "db72bd04fdae7f404532a4c9904df3a21690853e",
+      "sourceType": "github",
+      "skillPath": "skills/vue-best-practices/SKILL.md",
+      "computedHash": "5aa4899782d76e4672d82ae6f6a6407e796ce76d19af5e3705268a6c64e50ffb"
     }
   }
 }
