@@ -1,8 +1,16 @@
-# Nuxt Auth Starter
+# Lift Ledger
 
-A Nuxt 4 starter project with Better Auth, NuxtHub, and PostgreSQL. It includes a local Nuxt layer for the default auth and admin experience. This repository is intended to be copied as a project template; it is not published as an npm package.
+A Nuxt 4 Web app for tracking weight lifting sessions. Users can record weight lifting sessions with exercises, weights, reps, and sets. A user can create resuable routines.
 
-## Start a project
+## Tech Stack
+
+- Nuxt4
+- NuxtUI
+- Better-Auth
+- NuxtHub
+- PostgreSQL
+
+## Setup project
 
 1. Create a project from this repository using GitHub's **Use this template** flow, or clone it.
 2. Install dependencies and configure the local environment:
@@ -27,36 +35,6 @@ A Nuxt 4 starter project with Better Auth, NuxtHub, and PostgreSQL. It includes 
    ```
 
    Visit `http://localhost:3000`, sign in at `/login`, and visit `/admin`.
-
-## How the project is organized
-
-- `layers/auth/` contains the default login, registration, admin, and profile experiences; their components, composables, account/admin API handlers, social-provider discovery, route rules, shared schemas, and types. It is a local Nuxt layer, not a package dependency.
-- `app/` contains project-owned pages and UI, including navigation and Better Auth client configuration.
-- `server/` contains this project's Better Auth server configuration, app-owned API handlers and utilities, and NuxtHub-managed PostgreSQL migrations. Better Auth tables are generated from the enabled plugins.
-
-The root `nuxt.config.ts` extends `./layers/auth`. To replace a layer page or component, add a project file at the same path under `app/`; project files take priority over extended-layer files. You can also edit or remove the local layer directly in your copied project.
-
-## Customize Better Auth
-
-Server and client configuration live in the project so each app can add the plugins it needs. For example, to add Better Auth's username plugin, add `username()` to `server/auth.config.ts` and `usernameClient()` to `app/auth.config.ts`:
-
-```ts
-// server/auth.config.ts
-import { username } from "better-auth/plugins";
-
-// Keep the existing config and add username() to its plugins array:
-plugins: [admin(), username()],
-```
-
-```ts
-// app/auth.config.ts
-import { usernameClient } from "better-auth/client/plugins";
-
-// Keep the existing client config and add usernameClient():
-plugins: [adminClient(), usernameClient()],
-```
-
-Better Auth plugin tables are generated from the server configuration. Restart Nuxt after changing plugins, generate and review a migration with `pnpm db:generate`, then apply it with `pnpm db:migrate`. Put application-owned tables in `server/db/schema/`; do not redefine Better Auth tables there.
 
 ## Configuration
 
