@@ -92,7 +92,7 @@ Create `server/db/schema/workouts.ts` with three tables.
 | `id` | UUID primary key |
 | `user_id` | References the Better Auth `user` table with **`ON DELETE CASCADE`**. Deleting an account deletes its workouts. |
 | `workout_date` | PostgreSQL `date`. Drizzle: `date("workout_date", { mode: "string" })` so the API sends `YYYY-MM-DD`. |
-| `focus` | One of: Full Body, Upper Body, Lower Body, Push, Pull, Legs, Chest, Back, Other. |
+| `focus` | `varchar(50)`. Free text, trimmed and required. Validated in step 2. |
 | `unit` | `kg` or `lb`. |
 | `created_at`, `updated_at` | Timestamps |
 | `completed_at` | Nullable. `null` means draft. |
@@ -105,7 +105,7 @@ uniqueIndex("workouts_one_draft_per_user")
   .where(sql`completed_at is null`);
 ```
 
-Find the existing user table with `grep -rn 'pgTable("user"' layers server`. Import it; don't re-create it.
+Import the `user` table from `#auth/schema`. Better Auth generates it there. Don't re-create it.
 
 ### `workout_exercises`
 
@@ -147,7 +147,7 @@ Start with a pure function and a test. This is the best first task for a new con
 Rules to implement:
 
 - **Date:** a `YYYY-MM-DD` string that's a real calendar date. Backdating is allowed. Future dates are rejected.
-- **Focus:** one of the nine allowed values.
+- **Focus:** free text. Trimmed, required, and at most 50 characters after trimming.
 - **Unit:** `kg` or `lb`. Default for the start form is `lb`.
 - **Weight:** the input is a *string*. Empty is **invalid** (not zero). Must be a number from `0` to `9999.99` with at most two decimal places.
 - **Reps:** the input is a *string*. Must be a whole number from `1` to `100`.
@@ -163,6 +163,7 @@ Cover at least:
 - Blank weight, negative weight, and `"0"` (valid)
 - Weight with three decimals (invalid), `9999.99` (valid), and `10000` (invalid)
 - Reps `"1.5"` (invalid), `"0"` (invalid), `"12"` (valid), `"100"` (valid), `"101"` (invalid)
+- Focus: blank or whitespace-only (invalid), 50 characters (valid), 51 characters (invalid), and `"Triceps, Chest, and Shoulders"` (valid)
 
 Run `pnpm test`.
 
