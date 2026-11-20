@@ -29,6 +29,20 @@
       "when": 1795033479453,
       "tag": "0003_remove_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795149272089,
+      "tag": "0004_nebulous_songbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795149569156,
+      "tag": "0005_gray_dreadnoughts",
+      "breakpoints": true
     }
   ]
 }

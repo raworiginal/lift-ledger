@@ -80,7 +80,7 @@ export const workoutSets = pgTable(
       name: "workout_sets_workout_exercise_fk",
       columns: [table.workoutId, table.exerciseId],
       foreignColumns: [workoutExercises.workoutId, workoutExercises.exerciseId],
-    }).onDelete("restrict"),
+    }).onDelete("no action"),
     unique("workout_sets_workout_position_unique").on(
       table.workoutId,
       table.position,
