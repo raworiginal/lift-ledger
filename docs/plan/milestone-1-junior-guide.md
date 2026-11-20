@@ -92,7 +92,7 @@ Create `server/db/schema/workouts.ts` with three tables.
 | `id` | UUID primary key |
 | `user_id` | References the Better Auth `user` table with **`ON DELETE CASCADE`**. Deleting an account deletes its workouts. |
 | `workout_date` | PostgreSQL `date`. Drizzle: `date("workout_date", { mode: "string" })` so the API sends `YYYY-MM-DD`. |
-| `focus` | One of: Full Body, Upper Body, Lower Body, Push, Pull, Legs, Chest, Back, Other. |
+| `focus` | Free text. Trimmed, required, and limited to 50 characters. |
 | `unit` | `kg` or `lb`. |
 | `created_at`, `updated_at` | Timestamps |
 | `completed_at` | Nullable. `null` means draft. |
@@ -147,7 +147,7 @@ Start with a pure function and a test. This is the best first task for a new con
 Rules to implement:
 
 - **Date:** a `YYYY-MM-DD` string that's a real calendar date. Backdating is allowed. Future dates are rejected.
-- **Focus:** one of the nine allowed values.
+- **Focus:** a trimmed, non-empty string up to 50 characters.
 - **Unit:** `kg` or `lb`. Default for the start form is `lb`.
 - **Weight:** the input is a *string*. Empty is **invalid** (not zero). Must be a number from `0` to `9999.99` with at most two decimal places.
 - **Reps:** the input is a *string*. Must be a whole number from `1` to `100`.
