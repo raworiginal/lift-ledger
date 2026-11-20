@@ -1,5 +1,5 @@
 {
-  "id": "05f35915-d055-4b3d-9085-f93a3ba6d00e",
+  "id": "c68db372-58e2-4287-b02b-8efc88e3b188",
   "prevId": "bbc48935-6c1d-4ee4-8575-19a6a5ec1bcc",
   "version": "7",
   "dialect": "postgresql",
@@ -911,29 +911,7 @@
           "notNull": true
         }
       },
-      "indexes": {
-        "workout_sets_workout_position_idx": {
-          "name": "workout_sets_workout_position_idx",
-          "columns": [
-            {
-              "expression": "workout_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "position",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "workout_sets_workout_id_workouts_id_fk": {
           "name": "workout_sets_workout_id_workouts_id_fk",
@@ -965,7 +943,16 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "workout_sets_workout_position_unique": {
+          "name": "workout_sets_workout_position_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "workout_id",
+            "position"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {
         "workout_sets_weight_check": {
@@ -1004,13 +991,14 @@
         },
         "focus": {
           "name": "focus",
-          "type": "varchar(50)",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "unit": {
           "name": "unit",
-          "type": "text",
+          "type": "workout_unit",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -1047,7 +1035,7 @@
             }
           ],
           "isUnique": true,
-          "where": "completed_at is null",
+          "where": "\"workouts\".\"completed_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -1071,16 +1059,20 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {
-        "workouts_unit_check": {
-          "name": "workouts_unit_check",
-          "value": "\"workouts\".\"unit\" in ('kg', 'lb')"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.workout_unit": {
+      "name": "workout_unit",
+      "schema": "public",
+      "values": [
+        "kg",
+        "lb"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

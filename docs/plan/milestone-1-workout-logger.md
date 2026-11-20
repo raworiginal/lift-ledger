@@ -19,7 +19,7 @@ Cascade deletes from workouts to their exercises and sets, and from users to the
 Set the following rules in server validation and enforce the core invariants in the database:
 
 - **Date:** Store a PostgreSQL `date` and send `YYYY-MM-DD` across the API. Default to the device’s local date, not the UTC date, and allow backdating. Future dates are rejected.
-- **Focus:** Require a selection when starting: Full Body, Upper Body, Lower Body, Push, Pull, Legs, Chest, Back, or Other.
+- **Focus:** Require a value when starting. Free text, trimmed, up to 50 characters.
 - **Weight and reps:** Use `numeric(6,2)` for weight, allowing `0` through `9999.99` with up to two decimal places. Reps are an integer from `1` through `100`. An empty weight field is invalid, not zero.
 - **Unit:** Choose it when starting, defaulting to `lb`. Don’t let a user switch units while sets exist; changing the label would silently reinterpret every weight.
 - **Order:** Assign the next position on the server. Don’t renumber stored positions after a delete. In the UI, show contiguous set numbers *within each exercise*.

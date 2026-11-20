@@ -5,10 +5,12 @@ import {
   foreignKey,
   integer,
   numeric,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
   varchar,
@@ -16,29 +18,30 @@ import {
 import { user } from "#auth/schema";
 import { exercises } from "./exercises";
 
+export const workoutUnit = pgEnum("workout_unit", ["kg", "lb"]);
+
 export const workouts = pgTable(
   "workouts",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: uuid("id").defaultRandom().primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     workoutDate: date("workout_date", { mode: "string" }).notNull(),
     focus: varchar("focus", { length: 50 }).notNull(),
-    unit: text("unit").notNull(),
+    unit: workoutUnit("unit").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+      .defaultNow()
+      .notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+      .defaultNow()
+      .notNull(),
     completedAt: timestamp("completed_at", { withTimezone: true }),
   },
   (table) => [
-    check("workouts_unit_check", sql`${table.unit} in ('kg', 'lb')`),
     uniqueIndex("workouts_one_draft_per_user")
       .on(table.userId)
-      .where(sql`completed_at is null`),
+      .where(sql`${table.completedAt} is null`),
   ],
 );
 
@@ -79,7 +82,7 @@ export const workoutSets = pgTable(
       columns: [table.workoutId, table.exerciseId],
       foreignColumns: [workoutExercises.workoutId, workoutExercises.exerciseId],
     }).onDelete("restrict"),
-    uniqueIndex("workout_sets_workout_position_idx").on(
+    unique("workout_sets_workout_position_unique").on(
       table.workoutId,
       table.position,
     ),
