@@ -2,7 +2,19 @@
 
 **Done means you can log a real workout on your phone, refresh mid-session without losing saved sets, finish it, and reopen it from history.** Build that full loop before adding last-time comparisons, routines, or the heatmap.
 
-This document is the source of truth for the requirements. A step-by-step walkthrough for junior developers lives in `/home/raworiginal/.opencode/plan/milestone-1-junior-guide.md`.
+This document is the source of truth for the requirements. A step-by-step walkthrough for junior developers lives in `/home/raworiginal/.opencode/plan/milestone-1-junior-guide.md`. Domain terms are defined in `GLOSSARY.md` at the repo root.
+
+## MVP scope and decisions
+
+- **MVP:** milestone 1, plus last-time comparison and the heatmap dashboard. Routines are deferred.
+- **Last time:** the most recent completed workout containing the exercise, ordered by `workout_date`, then `completed_at`. Drafts are excluded. Sets from a different unit are shown in their original unit with its label; they are not converted.
+- **Heatmap:** the last 52 weeks ending today, weeks starting Monday, on the `/app` home page. A day is active if it has at least one completed workout, grouped by `workout_date`. Shading is by the number of completed workouts that day, capped at four levels. The client sends its local date; the server does no time zone conversion.
+- **Drafts:** no automatic expiry. Users finish or discard them.
+- **History:** pages of 20 with a "Load more" button, using keyset pagination.
+- **Users:** multi-user with account isolation. Sign-in uses `email-password` mode for the MVP.
+- **Self-hosting:** a Dockerfile builds the Nuxt Node server (Node 22.19 or newer). `docker-compose.yml` runs the app and PostgreSQL 16 with a named volume. TLS is handled by a reverse proxy outside this repo. `pnpm db:migrate` runs before the app container starts.
+- **Vercel:** run `pnpm db:migrate` manually before each deploy, using the Neon direct URL in `MIGRATIONS_DATABASE_URL`. Migrations do not run during the build.
+- **Open item:** Neon's pooled endpoint uses PgBouncer in transaction mode, which requires postgres-js with `prepare: false`. Confirm NuxtHub's `driver: "postgres-js"` setup allows passing this option before deploying to Vercel.
 
 ## 1. Add workout storage and validation
 
