@@ -24,7 +24,7 @@ A Nuxt 4 Web app for tracking weight lifting sessions. Users can record weight l
 4. Start PostgreSQL and prepare the database:
 
    ```sh
-   docker compose up -d
+   docker compose up -d db
    ```
 
    In the default `email-password` mode, run `pnpm auth:setup` to apply pending migrations and create the initial admin. For `social-only` setup, follow the separate steps below.
@@ -72,9 +72,41 @@ Deploy with the standard Node/serverless runtime (Node 22.19+), not an Edge runt
 
 Run migrations as a release/deploy step, not in the application build. Set `NUXT_PUBLIC_SITE_URL` to the production domain and configure the OAuth callback URLs above. Add secrets in the hosting provider’s environment settings rather than committing them.
 
-### Self-hosted PostgreSQL
+### Self-hosting with Docker
 
-Use the included Docker Compose service for local development. For production, provide a PostgreSQL connection string through `DATABASE_URL` and run `pnpm db:migrate` before deploying the app.
+`docker-compose.yml` runs three services:
+
+- `db`: PostgreSQL 17 with the named volume `postgres-data`. It listens on `127.0.0.1:5432` only.
+- `migrate`: runs `pnpm db:migrate` once and exits. The app does not start until it succeeds.
+- `app`: the Nuxt Node server, built from the `Dockerfile` and listening on `127.0.0.1:3000`.
+
+TLS is not handled by this repo. Put a reverse proxy in front of `127.0.0.1:3000` that terminates HTTPS for your domain.
+
+1. Create `.env` from `.env.example`. Set `POSTGRES_PASSWORD`, a `NUXT_APP_SECRET` of at least 32 characters, `NUXT_PUBLIC_SITE_URL` set to your public `https://` URL, and the `ADMIN_*` values. The `DATABASE_URL` in `.env` is for local use; Compose overrides it to point at the `db` container.
+2. Build and start the stack:
+
+   ```sh
+   docker compose up -d --build
+   ```
+
+3. Create the initial admin and load the exercise catalog. Run these once, after the first start:
+
+   ```sh
+   docker compose run --rm migrate pnpm auth:setup
+   docker compose run --rm migrate pnpm db:seed:exercises
+   ```
+
+4. Check that the app is running with `docker compose ps` and `docker compose logs app`.
+
+To upgrade, pull the new code and run `docker compose up -d --build` again. The `migrate` service applies new migrations before the app restarts. Rerun `pnpm db:seed:exercises` if the catalog data changed.
+
+To back up the database:
+
+```sh
+docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > backup.sql
+```
+
+Keep `.env` out of source control, and keep backups somewhere other than the host that runs the stack.
 
 ## Database commands
 

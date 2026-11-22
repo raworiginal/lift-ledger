@@ -12,9 +12,9 @@ This document is the source of truth for the requirements. A step-by-step walkth
 - **Drafts:** no automatic expiry. Users finish or discard them.
 - **History:** pages of 20 with a "Load more" button, using keyset pagination.
 - **Users:** multi-user with account isolation. Sign-in uses `email-password` mode for the MVP.
-- **Self-hosting:** a Dockerfile builds the Nuxt Node server (Node 22.19 or newer). `docker-compose.yml` runs the app and PostgreSQL 16 with a named volume. TLS is handled by a reverse proxy outside this repo. `pnpm db:migrate` runs before the app container starts.
-- **Vercel:** run `pnpm db:migrate` manually before each deploy, using the Neon direct URL in `MIGRATIONS_DATABASE_URL`. Migrations do not run during the build.
-- **Open item:** Neon's pooled endpoint uses PgBouncer in transaction mode, which requires postgres-js with `prepare: false`. Confirm NuxtHub's `driver: "postgres-js"` setup allows passing this option before deploying to Vercel.
+- **Self-hosting:** a Dockerfile builds the Nuxt Node server (Node 22.21.1 image). `docker-compose.yml` runs the app, a one-shot `migrate` service (`pnpm db:migrate`), and PostgreSQL 17 with a named volume. The app starts only after migrations succeed. TLS is handled by a reverse proxy outside this repo.
+- **Vercel (deferred, out of MVP scope):** the MVP is self-hosted only. If Vercel is added later, run `pnpm db:migrate` manually before each deploy, using the Neon direct URL in `MIGRATIONS_DATABASE_URL`.
+- **Deferred open item:** Neon's pooled endpoint uses PgBouncer in transaction mode, which requires postgres-js with `prepare: false`. Confirm NuxtHub's `driver: "postgres-js"` setup allows passing this option before any Vercel deploy.
 
 ## 1. Add workout storage and validation
 
