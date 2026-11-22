@@ -1,29 +1,29 @@
 import type { WorkoutSummary, WorkoutUnit } from "~~/shared/types/workouts";
 import { localDateString } from "~/utils/workout-dates";
+import { workoutCacheKey } from "~/utils/workout-cache";
 
 export type AsyncStatus = "idle" | "pending" | "success" | "error";
 
 export function useCurrentDraft() {
-  const draft = ref<WorkoutSummary | null>(null);
-  const status = ref<AsyncStatus>("idle");
-
-  async function refresh() {
-    status.value = "pending";
-    try {
-      draft.value =
-        (await $fetch<WorkoutSummary | null>("/api/workouts/draft")) || null;
-      status.value = "success";
-    } catch {
-      status.value = "error";
-    }
-  }
+  const requestFetch = useRequestFetch();
+  const {
+    data: draft,
+    status,
+    refresh,
+  } = useAsyncData<WorkoutSummary | null>(
+    workoutCacheKey("draft"),
+    async () =>
+      (await requestFetch<WorkoutSummary | null>("/api/workouts/draft")) ||
+      null,
+    { default: () => null },
+  );
 
   async function start(input: {
     date: string;
     focus: string;
     unit: WorkoutUnit;
   }): Promise<WorkoutSummary> {
-    const workout = await $fetch<WorkoutSummary>("/api/workouts", {
+    const workout = await requestFetch<WorkoutSummary>("/api/workouts", {
       method: "POST",
       body: { ...input, today: localDateString() },
     });

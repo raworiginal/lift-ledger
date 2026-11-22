@@ -11,6 +11,7 @@ const props = defineProps<{
   limit?: number;
   offset?: number;
   pageSizeOptions: readonly number[];
+  canResetPassword: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -63,6 +64,7 @@ const pageSizeItems = computed(() =>
     <AdminUsersMobileList
       v-if="users.length > 0 && !error"
       :users="users"
+      :can-reset-password="canResetPassword"
       @edit="emit('edit', $event)"
       @reset-password="emit('resetPassword', $event)"
       @ban="emit('ban', $event)"
@@ -75,6 +77,7 @@ const pageSizeItems = computed(() =>
       v-if="!error"
       :users="users"
       :loading="loading"
+      :can-reset-password="canResetPassword"
       @edit="emit('edit', $event)"
       @reset-password="emit('resetPassword', $event)"
       @ban="emit('ban', $event)"

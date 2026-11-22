@@ -2,9 +2,7 @@
 import WorkoutHistoryList from "~/components/workouts/presentational/WorkoutHistoryList.vue";
 import { useWorkoutHistory } from "~/composables/workouts/useWorkoutHistory";
 
-const { items, hasMore, status, loadMore, refresh } = useWorkoutHistory();
-
-onMounted(() => refresh());
+const { items, hasMore, status, loadMore, retry } = useWorkoutHistory();
 
 function openWorkout(id: string) {
   return navigateTo(`/app/workouts/${id}`);
@@ -36,7 +34,7 @@ function openWorkout(id: string) {
       title="Could not load your workouts."
     >
       <template #actions>
-        <UButton size="sm" color="neutral" variant="outline" @click="refresh">
+        <UButton size="sm" color="neutral" variant="outline" @click="retry">
           Try again
         </UButton>
       </template>

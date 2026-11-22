@@ -39,11 +39,13 @@ const accountItems = computed<DropdownMenuItem[][]>(() => [
           to="/"
           color="neutral"
           variant="ghost"
-          :aria-label="collapsed ? 'AppName home' : undefined"
+          :aria-label="collapsed ? 'Lift Ledger home' : undefined"
           block
         >
           <UIcon name="i-lucide-shield-check" class="size-5 shrink-0" />
-          <span v-if="!collapsed" class="truncate font-semibold">AppName</span>
+          <span v-if="!collapsed" class="truncate font-semibold"
+            >Lift Ledger</span
+          >
         </UButton>
       </template>
 

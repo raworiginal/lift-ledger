@@ -8,6 +8,7 @@ import AdminUserProviders from "./AdminUserProviders.vue";
 defineProps<{
   users: AdminUser[];
   loading: boolean;
+  canResetPassword: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -74,6 +75,7 @@ const columns: TableColumn<AdminUser>[] = [
       <template #actions-cell="{ row }">
         <AdminUserActions
           :user="row.original"
+          :can-reset-password="canResetPassword"
           @edit="emit('edit', $event)"
           @reset-password="emit('resetPassword', $event)"
           @ban="emit('ban', $event)"

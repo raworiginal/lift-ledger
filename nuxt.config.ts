@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
   extends: ["./layers/auth"],
-  modules: ["@nuxthub/core", "@nuxtjs/better-auth", "@nuxt/ui"],
+  modules: ["@nuxthub/core", "@nuxtjs/better-auth", "@nuxt/ui", "@nuxt/eslint"],
   srcDir: "app/",
   dir: { shared: "layers/auth/shared" },
   components: [{ path: "~/components", pathPrefix: false }],

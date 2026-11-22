@@ -9,6 +9,7 @@ export function getSafeLocalRedirect(
     !candidate.startsWith("/") ||
     candidate.startsWith("//") ||
     candidate.includes("\\") ||
+    // eslint-disable-next-line no-control-regex -- rejects control characters in redirect targets
     /[\u0000-\u001f\u007f]/.test(candidate)
   ) {
     return fallback;

@@ -8,6 +8,7 @@ import AdminUsersSearch from "./AdminUsersSearch.vue";
 
 defineProps<{
   authMode: string;
+  canResetPassword: boolean;
   searchValue: string;
   searchField: "email" | "name";
   users: AdminUser[];
@@ -74,6 +75,7 @@ const emit = defineEmits<{
         :limit="limit"
         :offset="offset"
         :page-size-options="pageSizeOptions"
+        :can-reset-password="canResetPassword"
         @edit="emit('edit', $event)"
         @reset-password="emit('resetPassword', $event)"
         @ban="emit('ban', $event)"

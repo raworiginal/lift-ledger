@@ -41,7 +41,7 @@ export function useAdminUsersQuery() {
 
     for (const [key, value] of Object.entries(next)) {
       if (value === undefined || value === "") {
-        delete query[key];
+        Reflect.deleteProperty(query, key);
       } else {
         query[key] = String(value);
       }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { after, before, test } from "node:test";
 import { eq } from "drizzle-orm";
-import postgres from "postgres";
+import type postgres from "postgres";
 import { heatmapWindow } from "../../shared/activity/heatmap";
 import { workouts, workoutSets } from "../../server/db/schema/workouts";
 import {

@@ -7,13 +7,13 @@ const { loading: logoutLoading, submit: logout } = useLogout();
   <UHeader>
     <template #left>
       <UButton
-        to="/"
+        to="/app"
         color="neutral"
         variant="ghost"
         class="text-xl font-semibold"
-        aria-label="AppName home"
+        aria-label="Lift Ledger home"
       >
-        AppName
+        Lift Ledger
       </UButton>
     </template>
 

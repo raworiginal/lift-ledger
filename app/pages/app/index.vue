@@ -8,12 +8,7 @@ import { readApiError } from "~/utils/workout-errors";
 
 const { user } = useUserSession();
 
-const {
-  draft,
-  status: draftStatus,
-  refresh: refreshDraft,
-  start,
-} = useCurrentDraft();
+const { draft, status: draftStatus, start } = useCurrentDraft();
 const {
   cells: activityCells,
   status: activityStatus,
@@ -26,7 +21,6 @@ const today = ref("");
 
 onMounted(() => {
   today.value = localDateString();
-  refreshDraft();
   refreshActivity();
 });
 
@@ -65,22 +59,6 @@ const shortcuts = computed(() => [
     icon: "i-lucide-dumbbell",
     to: "/app/exercises",
   },
-  {
-    title: "Your profile",
-    description: "Update your personal details and manage sign-in methods.",
-    icon: "i-lucide-user-round-cog",
-    to: "/app/profile",
-  },
-  ...(user.value?.role === "admin"
-    ? [
-        {
-          title: "Admin panel",
-          description: "Manage users and account access.",
-          icon: "i-lucide-shield-check",
-          to: "/admin",
-        },
-      ]
-    : []),
 ]);
 </script>
 

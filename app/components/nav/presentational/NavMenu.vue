@@ -8,7 +8,10 @@ const props = withDefaults(
 
 const items = computed<NavigationMenuItem[]>(() =>
   props.loggedIn
-    ? [{ label: "App", to: "/app" }]
+    ? [
+        { label: "Workouts", to: "/app/workouts" },
+        { label: "Exercises", to: "/app/exercises" },
+      ]
     : [
         { label: "Login", to: "/login" },
         { label: "Register", to: "/register" },

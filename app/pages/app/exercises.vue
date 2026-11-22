@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import ExerciseFilters from "~/components/exercises/ExerciseFilters.vue";
 import ExerciseResults from "~/components/exercises/ExerciseResults.vue";
+import { useExerciseAlternatives } from "~/composables/exercises/useExerciseAlternatives";
 import type {
-  ExerciseAlternative,
   ExerciseFilters as ExerciseFilterValues,
   ExerciseListResponse,
   FilterOptions,
@@ -73,37 +73,13 @@ watch(
   },
 );
 
-const openAlternativesFor = ref<string | null>(null);
-const alternativesByExercise = reactive<Record<string, ExerciseAlternative[]>>(
-  {},
-);
-const alternativeErrors = reactive<Record<string, string>>({});
-const loadingAlternativesFor = ref<string | null>(null);
-
-async function toggleAlternatives(exerciseId: string) {
-  if (openAlternativesFor.value === exerciseId) {
-    openAlternativesFor.value = null;
-    return;
-  }
-
-  openAlternativesFor.value = exerciseId;
-  if (alternativesByExercise[exerciseId]) return;
-
-  loadingAlternativesFor.value = exerciseId;
-  delete alternativeErrors[exerciseId];
-
-  try {
-    const response = await $fetch<{ alternatives: ExerciseAlternative[] }>(
-      `/api/exercises/${exerciseId}/alternatives`,
-    );
-    alternativesByExercise[exerciseId] = response.alternatives;
-  } catch {
-    alternativeErrors[exerciseId] =
-      "Alternatives could not be loaded. Please try again.";
-  } finally {
-    loadingAlternativesFor.value = null;
-  }
-}
+const {
+  openFor: openAlternativesFor,
+  alternatives: alternativesByExercise,
+  errors: alternativeErrors,
+  loading: loadingAlternatives,
+  toggle: toggleAlternatives,
+} = useExerciseAlternatives();
 
 function pageBack() {
   filters.offset = Math.max(0, filters.offset - filters.limit);
@@ -147,7 +123,7 @@ function updateFilters(patch: Partial<ExerciseFilterValues>) {
         :open-alternatives-for="openAlternativesFor"
         :alternatives-by-exercise="alternativesByExercise"
         :alternative-errors="alternativeErrors"
-        :loading-alternatives-for="loadingAlternativesFor"
+        :loading-alternatives="loadingAlternatives"
         @page-back="pageBack"
         @page-forward="pageForward"
         @toggle-alternatives="toggleAlternatives"

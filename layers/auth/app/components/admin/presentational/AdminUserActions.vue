@@ -4,9 +4,8 @@ import type { AdminUser } from "#shared/auth/types/admin";
 
 const props = defineProps<{
   user: AdminUser;
+  canResetPassword: boolean;
 }>();
-const passwordAuthEnabled =
-  useRuntimeConfig().public.authMode !== "social-only";
 
 const emit = defineEmits<{
   edit: [user: AdminUser];
@@ -20,7 +19,7 @@ const emit = defineEmits<{
 const items = computed<DropdownMenuItem[][]>(() => [
   [
     { label: "Edit", onSelect: () => emit("edit", props.user) },
-    ...(passwordAuthEnabled
+    ...(props.canResetPassword
       ? [
           {
             label: "Reset password",

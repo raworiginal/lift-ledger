@@ -22,6 +22,7 @@ defineProps<{
   prefill: { weight: string; reps: string };
   prefillSourceId: string | null;
   saveState: SaveState;
+  saveError?: string | null;
   editingSetId: string | null;
 }>();
 
@@ -91,6 +92,7 @@ const emit = defineEmits<{
         :prefill-source-id="prefillSourceId"
         :unit="unit"
         :state="saveState"
+        :error="saveError"
         :disabled="disabled"
         @add="(values) => emit('add', values)"
       />

@@ -6,6 +6,7 @@ import AdminUserProviders from "./AdminUserProviders.vue";
 
 defineProps<{
   users: AdminUser[];
+  canResetPassword: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -55,6 +56,7 @@ const emit = defineEmits<{
         <div class="mt-4 border-t border-default pt-3">
           <AdminUserActions
             :user="user"
+            :can-reset-password="canResetPassword"
             @edit="emit('edit', $event)"
             @reset-password="emit('resetPassword', $event)"
             @ban="emit('ban', $event)"

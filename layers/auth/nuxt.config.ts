@@ -24,6 +24,7 @@ export default defineNuxtConfig({
     "/admin/**": {
       auth: { only: "user", user: { role: "admin" }, redirectTo: "/app" },
     },
+    "/": { auth: "guest" },
     "/login": { auth: "guest" },
     "/register": { auth: "guest" },
   },

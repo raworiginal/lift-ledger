@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { workoutIdSchema } from "~~/shared/validation/workouts";
 import { useWorkoutEditor } from "~/composables/workouts/useWorkoutEditor";
+import { useExerciseSearch } from "~/composables/workouts/useExerciseSearch";
 import ExerciseGroup from "~/components/workouts/presentational/ExerciseGroup.vue";
 import ExercisePicker from "~/components/workouts/presentational/ExercisePicker.vue";
 import WorkoutHeader from "~/components/workouts/presentational/WorkoutHeader.vue";
@@ -15,23 +16,22 @@ if (!workoutIdSchema.safeParse(workoutId).success) {
 }
 
 const editor = useWorkoutEditor(workoutId);
+const exerciseSearch = useExerciseSearch();
 const {
   detail,
   status,
   notFound,
+  refreshError,
   actionError,
-  setState,
-  hasPendingSave,
+  busy,
+  metadata,
   selectedExerciseId,
-  pickerResults,
-  pickerStatus,
 } = editor;
 
 const today = ref("");
 
 onMounted(() => {
   today.value = localDateString();
-  editor.refresh();
 });
 
 const editMode = ref(false);
@@ -47,17 +47,17 @@ const canEditUnit = computed(
     detail.value?.exercises.every((group) => group.sets.length === 0) ?? false,
 );
 const finishAllowed = computed(
-  () =>
-    detail.value !== null && canFinish(detail.value) && !hasPendingSave.value,
+  () => detail.value !== null && canFinish(detail.value) && !busy.value,
 );
 
 watch(pickerOpen, (open) => {
-  if (open) editor.searchExercises(pickerQuery.value);
+  if (open) exerciseSearch.search(pickerQuery.value);
+  else exerciseSearch.cancel();
 });
 
 function onPickerSearch(query: string) {
   pickerQuery.value = query;
-  editor.searchExercises(query);
+  exerciseSearch.search(query);
 }
 
 async function addExercise(exerciseId: string) {
@@ -107,10 +107,6 @@ function prefillFor(exerciseId: string) {
 function prefillSourceFor(exerciseId: string) {
   return editor.lastSetFor(exerciseId)?.id ?? null;
 }
-
-function saveStateFor(exerciseId: string) {
-  return selectedExerciseId.value === exerciseId ? setState.value : "idle";
-}
 </script>
 
 <template>
@@ -157,13 +153,33 @@ function saveStateFor(exerciseId: string) {
         :can-edit-unit="canEditUnit"
         :can-finish="finishAllowed"
         :editing="editMode"
-        :busy="hasPendingSave"
+        :busy="busy"
+        :metadata-state="metadata.state"
+        :metadata-error="metadata.error"
         @update="editor.updateMetadata"
         @finish="finish"
         @discard="confirmOpen = true"
         @start-editing="editMode = true"
         @stop-editing="stopEditing"
       />
+
+      <UAlert
+        v-if="refreshError"
+        color="warning"
+        variant="subtle"
+        :title="refreshError"
+      >
+        <template #actions>
+          <UButton
+            size="sm"
+            color="neutral"
+            variant="outline"
+            @click="editor.refresh()"
+          >
+            Try again
+          </UButton>
+        </template>
+      </UAlert>
 
       <UAlert
         v-if="actionError"
@@ -185,7 +201,8 @@ function saveStateFor(exerciseId: string) {
           :highlighted="selectedExerciseId === group.exerciseId"
           :prefill="prefillFor(group.exerciseId)"
           :prefill-source-id="prefillSourceFor(group.exerciseId)"
-          :save-state="saveStateFor(group.exerciseId)"
+          :save-state="editor.saveStateFor(group.exerciseId)"
+          :save-error="editor.saveErrorFor(group.exerciseId)"
           :editing-set-id="editingSetId"
           @add="(values) => saveSet(group.exerciseId, values)"
           @edit-set="(setId) => (editingSetId = setId)"
@@ -213,11 +230,12 @@ function saveStateFor(exerciseId: string) {
         v-if="canEdit"
         :open="pickerOpen"
         :query="pickerQuery"
-        :results="pickerResults"
-        :loading="pickerStatus === 'pending'"
+        :results="exerciseSearch.results.value"
+        :status="exerciseSearch.status.value"
         @update:open="pickerOpen = $event"
         @search="onPickerSearch"
         @select="addExercise"
+        @retry="exerciseSearch.retry"
       />
 
       <UModal

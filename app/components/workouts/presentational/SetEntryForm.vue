@@ -11,6 +11,7 @@ const props = defineProps<{
   prefillSourceId: string | null;
   unit: WorkoutUnit;
   state: SaveState;
+  error?: string | null;
   disabled?: boolean;
 }>();
 
@@ -21,12 +22,30 @@ const emit = defineEmits<{
 const weight = ref(props.prefill.weight);
 const reps = ref(props.prefill.reps);
 const showErrors = ref(false);
+const edited = ref(false);
+const submitted = ref<{ weight: string; reps: string } | null>(null);
+
+function markEdited() {
+  edited.value = true;
+}
 
 watch(
   () => props.prefillSourceId,
   () => {
+    if (edited.value) return;
     weight.value = props.prefill.weight;
     reps.value = props.prefill.reps;
+  },
+);
+
+watch(
+  () => props.state,
+  (state) => {
+    if (state !== "saved" || !submitted.value) return;
+    const unchangedSinceSubmit =
+      weight.value.trim() === submitted.value.weight &&
+      reps.value.trim() === submitted.value.reps;
+    if (unchangedSinceSubmit) edited.value = false;
   },
 );
 
@@ -44,7 +63,9 @@ const failed = computed(() => props.state === "failed");
 function submit() {
   showErrors.value = true;
   if (weightError.value || repsError.value) return;
-  emit("add", { weight: weight.value.trim(), reps: reps.value.trim() });
+  const values = { weight: weight.value.trim(), reps: reps.value.trim() };
+  submitted.value = values;
+  emit("add", values);
 }
 </script>
 
@@ -59,6 +80,7 @@ function submit() {
           autocomplete="off"
           placeholder="0"
           class="w-full"
+          @update:model-value="markEdited"
         />
       </UFormField>
       <UFormField label="Reps" :error="repsError" class="w-28">
@@ -69,6 +91,7 @@ function submit() {
           autocomplete="off"
           placeholder="0"
           class="w-full"
+          @update:model-value="markEdited"
         />
       </UFormField>
     </div>
@@ -86,7 +109,7 @@ function submit() {
         <span v-if="saving" class="text-muted">Saving…</span>
         <span v-else-if="state === 'saved'" class="text-success">Saved</span>
         <span v-else-if="failed" class="text-error">
-          Not saved. Your values are still here.
+          {{ error ?? "Not saved. Your values are still here." }}
         </span>
         <span v-else class="text-muted">
           Not saved until you tap Add set.

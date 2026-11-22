@@ -27,6 +27,7 @@ const {
   successMessage,
   hasPassword,
   load,
+  clearActionError,
   linkAccount,
   unlinkAccount,
   revokeSession,
@@ -45,10 +46,6 @@ watch(passwordSuccessMessage, (message) => {
 });
 
 onMounted(load);
-
-function clearActionError() {
-  actionError.value = null;
-}
 </script>
 
 <template>
@@ -67,24 +64,47 @@ function clearActionError() {
         @submit="submitPassword"
       />
     </div>
-    <AccountSettings
-      :user-email="user?.email ?? ''"
-      :accounts="accounts"
-      :sessions="sessions"
-      :providers="providers"
-      :loading="settingsLoading"
-      :action="action"
-      :deleting="deleting"
-      :load-error="loadError"
-      :action-error="actionError"
-      :success-message="successMessage"
-      :has-password="hasPassword"
-      :delete-account="deleteAccount"
-      @link-account="linkAccount"
-      @unlink-account="unlinkAccount"
-      @revoke-session="revokeSession"
-      @revoke-other-sessions="revokeOtherSessions"
-      @clear-action-error="clearActionError"
-    />
+    <div class="flex flex-col gap-4 p-4">
+      <SignInMethodsSection
+        :accounts="accounts"
+        :providers="providers"
+        :loading="settingsLoading"
+        :load-error="loadError"
+        :action="action"
+        @link-account="linkAccount"
+        @unlink-account="unlinkAccount"
+      />
+      <SessionsSection
+        :sessions="sessions"
+        :loading="settingsLoading"
+        :load-error="loadError"
+        :action="action"
+        @revoke-session="revokeSession"
+        @revoke-other-sessions="revokeOtherSessions"
+      />
+      <UAlert
+        v-if="successMessage"
+        color="success"
+        variant="soft"
+        :description="successMessage"
+        title="Account updated"
+      />
+      <UAlert
+        v-if="actionError"
+        color="error"
+        variant="soft"
+        :description="actionError"
+        title="Action failed"
+      />
+      <DeleteAccountSection
+        :user-email="user?.email ?? ''"
+        :has-password="hasPassword"
+        :loading="settingsLoading"
+        :load-error="loadError"
+        :deleting="deleting"
+        @clear-action-error="clearActionError"
+        @delete-account="deleteAccount"
+      />
+    </div>
   </div>
 </template>

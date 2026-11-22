@@ -14,6 +14,8 @@ const props = defineProps<{
   canFinish: boolean;
   editing: boolean;
   busy?: boolean;
+  metadataState: "idle" | "pending" | "success" | "error";
+  metadataError?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -56,9 +58,17 @@ function openDetails() {
   detailsOpen.value = true;
 }
 
+watch(
+  () => props.metadataState,
+  (state) => {
+    if (state === "success") detailsOpen.value = false;
+  },
+);
+
 function saveDetails() {
   showErrors.value = true;
   if (dateError.value || focusError.value) return;
+  if (props.metadataState === "pending") return;
   emit("update", {
     date: dateInput.value,
     focus: focusInput.value.trim(),
@@ -66,7 +76,6 @@ function saveDetails() {
       ? { unit: unitInput.value }
       : {}),
   });
-  detailsOpen.value = false;
 }
 </script>
 
@@ -161,8 +170,21 @@ function saveDetails() {
             class="w-full"
           />
         </UFormField>
+        <p
+          v-if="metadataError"
+          role="alert"
+          class="text-sm text-error sm:col-span-3"
+        >
+          {{ metadataError }} Your changes are still here.
+        </p>
         <div class="flex gap-2 sm:col-span-3">
-          <UButton type="submit" :disabled="busy">Save details</UButton>
+          <UButton
+            type="submit"
+            :loading="metadataState === 'pending'"
+            :disabled="busy || metadataState === 'pending'"
+          >
+            Save details
+          </UButton>
           <UButton color="neutral" variant="ghost" @click="detailsOpen = false">
             Cancel
           </UButton>

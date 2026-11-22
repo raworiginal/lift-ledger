@@ -9,7 +9,7 @@ defineProps<{
   openAlternativesFor: string | null;
   alternativesByExercise: Record<string, ExerciseAlternative[]>;
   alternativeErrors: Record<string, string>;
-  loadingAlternativesFor: string | null;
+  loadingAlternatives: Record<string, boolean>;
 }>();
 
 const emit = defineEmits<{
@@ -50,7 +50,7 @@ const emit = defineEmits<{
         :alternatives="alternativesByExercise[exercise.id]"
         :alternative-error="alternativeErrors[exercise.id]"
         :alternatives-open="openAlternativesFor === exercise.id"
-        :alternatives-loading="loadingAlternativesFor === exercise.id"
+        :alternatives-loading="loadingAlternatives[exercise.id] === true"
         @toggle-alternatives="emit('toggleAlternatives', $event)"
       />
     </div>

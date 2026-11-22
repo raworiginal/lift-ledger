@@ -5,12 +5,13 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
-    "lint": "pnpm dlx prettier@3.6.2 --check app layers scripts server tests .github/workflows/*.yml .prettierrc.json package.json pnpm-workspace.yaml tsconfig.json nuxt.config.ts",
+    "lint": "eslint app layers server shared tests scripts eslint.config.mjs vitest.config.ts nuxt.config.ts",
     "format": "pnpm dlx prettier@3.6.2 --write app layers scripts server tests .github/workflows/*.yml .prettierrc.json package.json pnpm-workspace.yaml tsconfig.json nuxt.config.ts",
-    "format:check": "pnpm dlx prettier@3.6.2 --check app layers scripts server tests .github/workflows/*.yml .prettierrc.json package.json pnpm-workspace.yaml tsconfig.json nuxt.config.ts",
+    "format:check": "pnpm dlx prettier@3.6.2 --check app layers scripts server shared tests .github/workflows/*.yml .prettierrc.json package.json pnpm-workspace.yaml tsconfig.json nuxt.config.ts eslint.config.mjs vitest.config.ts",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "test": "tsx --test tests/*.test.ts tests/server/api/admin/*.test.ts",
+    "test:frontend": "vitest run",
     "test:db": "tsx --import ./tests/db/register-aliases.mjs --test tests/db/*.test.ts",
     "typecheck": "nuxt typecheck",
     "db:generate": "nuxt db generate",
@@ -35,10 +36,16 @@
   "devDependencies": {
     "@iconify-json/bi": "^1.2.7",
     "@iconify-json/lucide": "^1.2.154",
+    "@nuxt/eslint": "^1.17.0",
+    "@nuxt/test-utils": "^4.4.0",
     "@types/node": "26.6.3",
+    "@vue/test-utils": "^2.6.0",
     "auth": "1.7.18",
+    "eslint": "^9.39.5",
+    "happy-dom": "^20.14.6",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
+    "vitest": "^4.1.12",
     "vue-tsc": "^3.3.14"
   },
   "engines": {

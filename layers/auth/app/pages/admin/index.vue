@@ -11,6 +11,7 @@ definePageMeta({
 
 const { options, updateOptions, handleSearch } = useAdminUsersQuery();
 const authMode = useRuntimeConfig().public.authMode;
+const canResetPassword = authMode !== "social-only";
 const { users, total, loading, error, refresh } = await useAdminUsers(options);
 
 const dialogs = ref<InstanceType<typeof AdminUsersDialogsContainer> | null>(
@@ -32,6 +33,7 @@ function openDialog(
 
   <AdminUsersView
     :auth-mode="authMode"
+    :can-reset-password="canResetPassword"
     :search-value="options.searchValue ?? ''"
     :search-field="options.searchField ?? 'name'"
     :users="users"
