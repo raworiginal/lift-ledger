@@ -1,7 +1,55 @@
 <script setup lang="ts">
+import StartWorkoutModal from "~/components/workouts/presentational/StartWorkoutModal.vue";
+import { useCurrentDraft } from "~/composables/workouts/useCurrentDraft";
+import { formatWorkoutDate, localDateString } from "~/utils/workout-dates";
+import { readApiError } from "~/utils/workout-errors";
+
 const { user } = useUserSession();
 
+const {
+  draft,
+  status: draftStatus,
+  refresh: refreshDraft,
+  start,
+} = useCurrentDraft();
+const startOpen = ref(false);
+const startPending = ref(false);
+const startError = ref<string | undefined>();
+const today = ref("");
+
+onMounted(() => {
+  today.value = localDateString();
+  refreshDraft();
+});
+
+async function startWorkout(values: {
+  date: string;
+  focus: string;
+  unit: "kg" | "lb";
+}) {
+  startPending.value = true;
+  startError.value = undefined;
+  try {
+    const workout = await start(values);
+    startOpen.value = false;
+    await navigateTo(`/app/workouts/${workout.id}`);
+  } catch (error) {
+    startError.value = readApiError(
+      error,
+      "Could not start the workout. Your values are still here.",
+    ).message;
+  } finally {
+    startPending.value = false;
+  }
+}
+
 const shortcuts = computed(() => [
+  {
+    title: "Workout history",
+    description: "Review completed workouts and correct past sessions.",
+    icon: "i-lucide-history",
+    to: "/app/workouts",
+  },
   {
     title: "Exercise catalog",
     description:
@@ -40,6 +88,49 @@ const shortcuts = computed(() => [
           Your account is ready. Choose a shortcut below to get started.
         </p>
       </header>
+
+      <UCard>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h2 class="font-semibold text-highlighted">
+              {{ draft ? "Workout in progress" : "Log a workout" }}
+            </h2>
+            <p class="text-sm text-muted">
+              <template v-if="draft">
+                {{ draft.focus }} · {{ formatWorkoutDate(draft.workoutDate) }}
+              </template>
+              <template v-else>
+                Start a session and log your sets as you go.
+              </template>
+            </p>
+          </div>
+          <UButton
+            v-if="draft"
+            :to="`/app/workouts/${draft.id}`"
+            icon="i-lucide-play"
+          >
+            Resume workout
+          </UButton>
+          <UButton
+            v-else
+            icon="i-lucide-plus"
+            :disabled="draftStatus === 'pending'"
+            @click="startOpen = true"
+          >
+            Start workout
+          </UButton>
+        </div>
+      </UCard>
+
+      <StartWorkoutModal
+        :open="startOpen"
+        :default-date="today"
+        :today="today"
+        :pending="startPending"
+        :error="startError"
+        @update:open="startOpen = $event"
+        @submit="startWorkout"
+      />
 
       <div class="grid gap-4 sm:grid-cols-2">
         <UPageCard

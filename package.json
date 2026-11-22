@@ -11,6 +11,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "test": "tsx --test tests/*.test.ts tests/server/api/admin/*.test.ts",
+    "test:db": "tsx --import ./tests/db/register-aliases.mjs --test tests/db/*.test.ts",
     "typecheck": "nuxt typecheck",
     "db:generate": "nuxt db generate",
     "db:migrate": "tsx scripts/migrate.ts",
