@@ -3,6 +3,7 @@ import {
   check,
   date,
   foreignKey,
+  index,
   integer,
   numeric,
   pgEnum,
@@ -42,6 +43,9 @@ export const workouts = pgTable(
     uniqueIndex("workouts_one_draft_per_user")
       .on(table.userId)
       .where(sql`${table.completedAt} is null`),
+    index("workouts_completed_user_date_idx")
+      .on(table.userId, table.workoutDate)
+      .where(sql`${table.completedAt} is not null`),
   ],
 );
 

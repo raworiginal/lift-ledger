@@ -4,9 +4,12 @@ import {
   count,
   desc,
   eq,
+  gte,
   isNotNull,
   isNull,
+  lte,
   max,
+  ne,
   sql,
 } from "drizzle-orm";
 import type { db as hubDb } from "@nuxthub/db";
@@ -17,6 +20,8 @@ import { numberSetsWithinExercise } from "../../app/utils/workout-sets";
 import { localDateSchema } from "../../shared/validation/workouts";
 import type {
   CompletedWorkoutPage,
+  LastTime,
+  WorkoutActivity,
   WorkoutDetail,
   WorkoutExerciseGroup,
   WorkoutSet,
@@ -149,11 +154,61 @@ async function loadSets(
   }));
 }
 
+async function getLastTime(
+  reader: Reader,
+  userId: string,
+  exerciseId: string,
+  excludeWorkoutId: string,
+): Promise<LastTime | null> {
+  const [row] = await reader
+    .select({
+      id: workouts.id,
+      workoutDate: workouts.workoutDate,
+      unit: workouts.unit,
+    })
+    .from(workouts)
+    .innerJoin(workoutSets, eq(workoutSets.workoutId, workouts.id))
+    .where(
+      and(
+        eq(workouts.userId, userId),
+        isNotNull(workouts.completedAt),
+        ne(workouts.id, excludeWorkoutId),
+        eq(workoutSets.exerciseId, exerciseId),
+      ),
+    )
+    .orderBy(
+      desc(workouts.workoutDate),
+      desc(workouts.completedAt),
+      desc(workouts.id),
+    )
+    .limit(1);
+
+  if (!row) return null;
+  return {
+    workoutId: row.id,
+    workoutDate: row.workoutDate,
+    unit: row.unit,
+    sets: await loadSets(reader, row.id, exerciseId),
+  };
+}
+
+async function withLastTime(
+  reader: Reader,
+  userId: string,
+  workoutId: string,
+  group: Omit<WorkoutExerciseGroup, "lastTime">,
+): Promise<WorkoutExerciseGroup> {
+  return {
+    ...group,
+    lastTime: await getLastTime(reader, userId, group.exerciseId, workoutId),
+  };
+}
+
 async function loadGroup(
   reader: Reader,
   workoutId: string,
   exerciseId: string,
-): Promise<WorkoutExerciseGroup | null> {
+): Promise<Omit<WorkoutExerciseGroup, "lastTime"> | null> {
   const [row] = await reader
     .select({
       exerciseId: workoutExercises.exerciseId,
@@ -269,11 +324,36 @@ export async function getWorkoutDetail(
 
   return {
     ...toSummary(row),
-    exercises: groupRows.map((group) => ({
-      ...group,
-      sets: sets.filter((set) => set.exerciseId === group.exerciseId),
-    })),
+    exercises: await Promise.all(
+      groupRows.map((group) =>
+        withLastTime(db, userId, workoutId, {
+          ...group,
+          sets: sets.filter((set) => set.exerciseId === group.exerciseId),
+        }),
+      ),
+    ),
   };
+}
+
+export async function listActiveDays(
+  db: WorkoutDb,
+  userId: string,
+  window: { start: string; end: string },
+): Promise<WorkoutActivity> {
+  const rows = await db
+    .selectDistinct({ workoutDate: workouts.workoutDate })
+    .from(workouts)
+    .where(
+      and(
+        eq(workouts.userId, userId),
+        isNotNull(workouts.completedAt),
+        gte(workouts.workoutDate, window.start),
+        lte(workouts.workoutDate, window.end),
+      ),
+    )
+    .orderBy(asc(workouts.workoutDate));
+
+  return { activeDates: rows.map((row) => row.workoutDate) };
 }
 
 export async function startDraft(
@@ -373,7 +453,12 @@ export async function addExerciseToWorkout(
     await lockOwnedWorkout(tx, userId, workoutId, input.expectedStatus);
 
     const existing = await loadGroup(tx, workoutId, input.exerciseId);
-    if (existing) return { exercise: existing, created: false };
+    if (existing) {
+      return {
+        exercise: await withLastTime(tx, userId, workoutId, existing),
+        created: false,
+      };
+    }
 
     const [catalogRow] = await tx
       .select({ id: exercises.id })
@@ -395,7 +480,10 @@ export async function addExerciseToWorkout(
 
     const exercise = await loadGroup(tx, workoutId, input.exerciseId);
     if (!exercise) throw notFound();
-    return { exercise, created: true };
+    return {
+      exercise: await withLastTime(tx, userId, workoutId, exercise),
+      created: true,
+    };
   });
 }
 

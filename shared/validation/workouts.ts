@@ -88,6 +88,10 @@ export const expectedStatusQuerySchema = z.object({
   expectedStatus: expectedStatusSchema,
 });
 
+export const activityQuerySchema = z.object({
+  today: localDateSchema,
+});
+
 export const listWorkoutsQuerySchema = z.object({
   cursor: z.string().max(500).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),

@@ -180,6 +180,7 @@ function saveStateFor(exerciseId: string) {
           :name="group.name"
           :sets="group.sets"
           :unit="detail.unit"
+          :last-time="group.lastTime"
           :editable="canEdit"
           :highlighted="selectedExerciseId === group.exerciseId"
           :prefill="prefillFor(group.exerciseId)"

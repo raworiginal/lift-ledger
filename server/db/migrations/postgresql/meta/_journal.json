@@ -50,6 +50,13 @@
       "when": 1795201888676,
       "tag": "0006_dizzy_taskmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795312042436,
+      "tag": "0007_familiar_tombstone",
+      "breakpoints": true
     }
   ]
 }

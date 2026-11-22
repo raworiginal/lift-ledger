@@ -49,5 +49,5 @@ A calendar day on which the user has at least one completed workout, judged by t
 _Avoid_: Streak day, training day
 
 **Heatmap**:
-A grid of the last 52 weeks showing active days, shaded by the number of completed workouts that day.
+A grid of the last 52 weeks, with weeks starting on Monday, showing each day as active (filled) or inactive (empty). Each cell is binary: it does not show how many workouts happened that day.
 _Avoid_: Calendar, activity chart

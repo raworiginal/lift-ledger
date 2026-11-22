@@ -1,0 +1,1 @@
+CREATE INDEX "workouts_completed_user_date_idx" ON "workouts" USING btree ("user_id","workout_date") WHERE "workouts"."completed_at" is not null;

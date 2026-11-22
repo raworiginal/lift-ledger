@@ -25,11 +25,23 @@ export interface WorkoutSet {
   reps: number;
 }
 
+export interface LastTime {
+  workoutId: string;
+  workoutDate: string;
+  unit: WorkoutUnit;
+  sets: WorkoutSet[];
+}
+
 export interface WorkoutExerciseGroup {
   exerciseId: string;
   name: string;
   position: number;
   sets: WorkoutSet[];
+  lastTime: LastTime | null;
+}
+
+export interface WorkoutActivity {
+  activeDates: string[];
 }
 
 export interface WorkoutDetail extends WorkoutSummary {

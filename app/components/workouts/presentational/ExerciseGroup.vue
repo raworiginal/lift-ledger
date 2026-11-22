@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type {
+  LastTime,
   SaveState,
   WorkoutSet,
   WorkoutUnit,
 } from "~~/shared/types/workouts";
+import { formatWorkoutDate } from "~/utils/workout-dates";
+import LastTimeSummary from "./LastTimeSummary.vue";
 import SetEntryForm from "./SetEntryForm.vue";
 import SetRow from "./SetRow.vue";
 
@@ -12,6 +15,7 @@ defineProps<{
   name: string;
   sets: WorkoutSet[];
   unit: WorkoutUnit;
+  lastTime: LastTime | null;
   editable: boolean;
   disabled?: boolean;
   highlighted?: boolean;
@@ -38,7 +42,14 @@ const emit = defineEmits<{
   >
     <div class="space-y-4">
       <div class="flex items-center justify-between gap-3">
-        <h2 class="font-semibold text-highlighted">{{ name }}</h2>
+        <div class="min-w-0 space-y-1">
+          <h2 class="font-semibold text-highlighted">{{ name }}</h2>
+          <p v-if="lastTime" class="text-sm text-muted">
+            Last: {{ formatWorkoutDate(lastTime.workoutDate) }} ·
+            {{ lastTime.sets.length }}
+            {{ lastTime.sets.length === 1 ? "set" : "sets" }}
+          </p>
+        </div>
         <UButton
           v-if="editable && sets.length === 0"
           size="sm"
@@ -69,6 +80,11 @@ const emit = defineEmits<{
       </ol>
       <p v-else class="text-sm text-muted">No sets yet.</p>
 
+      <LastTimeSummary
+        v-if="editable && lastTime"
+        :sets="lastTime.sets"
+        :unit="lastTime.unit"
+      />
       <SetEntryForm
         v-if="editable"
         :prefill="prefill"

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { after, before, test } from "node:test";
 import { eq } from "drizzle-orm";
 import postgres from "postgres";
+import { heatmapWindow } from "../../shared/activity/heatmap";
 import { workouts, workoutSets } from "../../server/db/schema/workouts";
 import {
   addExerciseToWorkout,
@@ -11,6 +12,7 @@ import {
   deleteWorkout,
   getDraft,
   getWorkoutDetail,
+  listActiveDays,
   listCompletedWorkouts,
   removeExerciseFromWorkout,
   saveSet,
@@ -494,4 +496,236 @@ test("deleting a user deletes their workouts", async () => {
     .from(workouts)
     .where(eq(workouts.userId, userId));
   assert.equal(rows.length, 0);
+});
+
+async function finishedWorkout(
+  userId: string,
+  date: string,
+  exerciseId: string,
+  sets: Array<{ weight: string; reps: string }>,
+  unit: "kg" | "lb" = "lb",
+): Promise<string> {
+  const { workout } = await startDraft(db, userId, {
+    date,
+    focus: "Push",
+    unit,
+  });
+  await addExerciseToWorkout(db, userId, workout.id, {
+    exerciseId,
+    expectedStatus: "draft",
+  });
+  for (const set of sets) {
+    await saveSet(db, userId, workout.id, {
+      id: randomUUID(),
+      exerciseId,
+      ...set,
+      expectedStatus: "draft",
+    });
+  }
+  await completeWorkout(db, userId, workout.id);
+  return workout.id;
+}
+
+async function setCompletedAt(workoutId: string, completedAt: string) {
+  await db
+    .update(workouts)
+    .set({ completedAt: new Date(completedAt) })
+    .where(eq(workouts.id, workoutId));
+}
+
+function groupFor(
+  detail: Awaited<ReturnType<typeof getWorkoutDetail>>,
+  exerciseId: string,
+) {
+  return detail?.exercises.find((group) => group.exerciseId === exerciseId);
+}
+
+test("last time picks the latest completed workout by date, then completed_at", async () => {
+  const userId = await newUser();
+  const sameDayEarlier = await finishedWorkout(
+    userId,
+    "2026-03-01",
+    exerciseIds[0],
+    [{ weight: "100", reps: "5" }],
+  );
+  const sameDayLater = await finishedWorkout(
+    userId,
+    "2026-03-01",
+    exerciseIds[0],
+    [{ weight: "110", reps: "3" }],
+  );
+  const olderDateCompletedLast = await finishedWorkout(
+    userId,
+    "2026-02-01",
+    exerciseIds[0],
+    [{ weight: "90", reps: "8" }],
+  );
+  await setCompletedAt(sameDayEarlier, "2026-03-01T10:00:00Z");
+  await setCompletedAt(sameDayLater, "2026-03-01T18:00:00Z");
+  await setCompletedAt(olderDateCompletedLast, "2026-12-01T10:00:00Z");
+
+  const next = await startWorkout(userId, "2026-03-10");
+  await addExerciseToWorkout(db, userId, next.id, {
+    exerciseId: exerciseIds[0],
+    expectedStatus: "draft",
+  });
+
+  const lastTime = groupFor(
+    await getWorkoutDetail(db, userId, next.id),
+    exerciseIds[0],
+  )?.lastTime;
+
+  assert.equal(lastTime?.workoutId, sameDayLater);
+  assert.equal(lastTime?.workoutDate, "2026-03-01");
+  assert.equal(lastTime?.unit, "lb");
+  assert.deepEqual(
+    lastTime?.sets.map((set) => [set.weight, set.reps]),
+    [["110.00", 3]],
+  );
+});
+
+test("last time ignores drafts, other users, and the workout being viewed", async () => {
+  const owner = await newUser();
+  const other = await newUser();
+  const earlier = await finishedWorkout(owner, "2026-04-01", exerciseIds[0], [
+    { weight: "100", reps: "5" },
+  ]);
+  const middle = await finishedWorkout(owner, "2026-04-05", exerciseIds[0], [
+    { weight: "120", reps: "2" },
+  ]);
+  await finishedWorkout(other, "2026-04-08", exerciseIds[0], [
+    { weight: "777", reps: "1" },
+  ]);
+
+  const draft = await startWorkout(owner, "2026-04-10");
+  await addExerciseToWorkout(db, owner, draft.id, {
+    exerciseId: exerciseIds[0],
+    expectedStatus: "draft",
+  });
+  await saveSet(db, owner, draft.id, {
+    id: randomUUID(),
+    exerciseId: exerciseIds[0],
+    weight: "999",
+    reps: "1",
+    expectedStatus: "draft",
+  });
+
+  const draftLastTime = groupFor(
+    await getWorkoutDetail(db, owner, draft.id),
+    exerciseIds[0],
+  )?.lastTime;
+  assert.equal(draftLastTime?.workoutId, middle);
+
+  const completedLastTime = groupFor(
+    await getWorkoutDetail(db, owner, middle),
+    exerciseIds[0],
+  )?.lastTime;
+  assert.equal(completedLastTime?.workoutId, earlier);
+  assert.deepEqual(
+    completedLastTime?.sets.map((set) => set.weight),
+    ["100.00"],
+  );
+});
+
+test("last time is null when no earlier completed workout has the exercise", async () => {
+  const userId = await newUser();
+  const only = await finishedWorkout(userId, "2026-05-01", exerciseIds[0], [
+    { weight: "60", reps: "10" },
+  ]);
+
+  const ownLastTime = groupFor(
+    await getWorkoutDetail(db, userId, only),
+    exerciseIds[0],
+  )?.lastTime;
+  assert.equal(ownLastTime, null);
+
+  const draft = await startWorkout(userId, "2026-05-02");
+  const added = await addExerciseToWorkout(db, userId, draft.id, {
+    exerciseId: exerciseIds[1],
+    expectedStatus: "draft",
+  });
+  assert.equal(added.exercise.lastTime, null);
+});
+
+test("adding an exercise returns its last time with the group", async () => {
+  const userId = await newUser();
+  const earlier = await finishedWorkout(userId, "2026-06-01", exerciseIds[0], [
+    { weight: "70", reps: "6" },
+  ]);
+  const draft = await startWorkout(userId, "2026-06-03");
+
+  const added = await addExerciseToWorkout(db, userId, draft.id, {
+    exerciseId: exerciseIds[0],
+    expectedStatus: "draft",
+  });
+  const existing = await addExerciseToWorkout(db, userId, draft.id, {
+    exerciseId: exerciseIds[0],
+    expectedStatus: "draft",
+  });
+
+  assert.equal(added.exercise.lastTime?.workoutId, earlier);
+  assert.equal(existing.created, false);
+  assert.equal(existing.exercise.lastTime?.workoutId, earlier);
+});
+
+test("last time keeps the original unit of the earlier workout", async () => {
+  const userId = await newUser();
+  const kgWorkout = await finishedWorkout(
+    userId,
+    "2026-07-01",
+    exerciseIds[0],
+    [{ weight: "50", reps: "8" }],
+    "kg",
+  );
+  const draft = await startWorkout(userId, "2026-07-03");
+  await addExerciseToWorkout(db, userId, draft.id, {
+    exerciseId: exerciseIds[0],
+    expectedStatus: "draft",
+  });
+
+  const lastTime = groupFor(
+    await getWorkoutDetail(db, userId, draft.id),
+    exerciseIds[0],
+  )?.lastTime;
+
+  assert.equal(lastTime?.workoutId, kgWorkout);
+  assert.equal(lastTime?.unit, "kg");
+  assert.deepEqual(
+    lastTime?.sets.map((set) => set.weight),
+    ["50.00"],
+  );
+});
+
+test("active days include only the user's completed workouts inside the window", async () => {
+  const userId = await newUser();
+  const other = await newUser();
+  const today = "2026-11-20";
+  const window = heatmapWindow(today);
+
+  await finishedWorkout(userId, today, exerciseIds[0], [
+    { weight: "20", reps: "10" },
+  ]);
+  await finishedWorkout(userId, today, exerciseIds[0], [
+    { weight: "25", reps: "10" },
+  ]);
+  await finishedWorkout(userId, window.start, exerciseIds[0], [
+    { weight: "20", reps: "10" },
+  ]);
+  await finishedWorkout(userId, "2026-11-22", exerciseIds[0], [
+    { weight: "20", reps: "10" },
+  ]);
+  await finishedWorkout(userId, "2026-11-23", exerciseIds[0], [
+    { weight: "20", reps: "10" },
+  ]);
+  await finishedWorkout(userId, "2025-11-23", exerciseIds[0], [
+    { weight: "20", reps: "10" },
+  ]);
+  await finishedWorkout(other, today, exerciseIds[0], [
+    { weight: "20", reps: "10" },
+  ]);
+  await startWorkout(userId, "2026-11-19");
+
+  const activity = await listActiveDays(db, userId, window);
+
+  assert.deepEqual(activity.activeDates, [window.start, today, "2026-11-22"]);
 });

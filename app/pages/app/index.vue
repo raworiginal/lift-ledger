@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import ActivityHeatmap from "~/components/workouts/presentational/ActivityHeatmap.vue";
 import StartWorkoutModal from "~/components/workouts/presentational/StartWorkoutModal.vue";
+import { useActivity } from "~/composables/workouts/useActivity";
 import { useCurrentDraft } from "~/composables/workouts/useCurrentDraft";
 import { formatWorkoutDate, localDateString } from "~/utils/workout-dates";
 import { readApiError } from "~/utils/workout-errors";
@@ -12,6 +14,11 @@ const {
   refresh: refreshDraft,
   start,
 } = useCurrentDraft();
+const {
+  cells: activityCells,
+  status: activityStatus,
+  refresh: refreshActivity,
+} = useActivity();
 const startOpen = ref(false);
 const startPending = ref(false);
 const startError = ref<string | undefined>();
@@ -20,6 +27,7 @@ const today = ref("");
 onMounted(() => {
   today.value = localDateString();
   refreshDraft();
+  refreshActivity();
 });
 
 async function startWorkout(values: {
@@ -119,6 +127,21 @@ const shortcuts = computed(() => [
           >
             Start workout
           </UButton>
+        </div>
+      </UCard>
+
+      <UCard>
+        <div class="space-y-4">
+          <div class="space-y-1">
+            <h2 class="font-semibold text-highlighted">Activity</h2>
+            <p class="text-sm text-muted">
+              Days with a completed workout over the last 52 weeks.
+            </p>
+          </div>
+          <p v-if="activityStatus === 'error'" class="text-sm text-error">
+            Could not load your activity.
+          </p>
+          <ActivityHeatmap v-else :cells="activityCells" />
         </div>
       </UCard>
 
