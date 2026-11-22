@@ -11,6 +11,7 @@ const { user } = useUserSession();
 const { draft, status: draftStatus, start } = useCurrentDraft();
 const {
   cells: activityCells,
+  hasActivity,
   status: activityStatus,
   refresh: refreshActivity,
 } = useActivity();
@@ -116,10 +117,36 @@ const shortcuts = computed(() => [
               Days with a completed workout over the last 52 weeks.
             </p>
           </div>
-          <p v-if="activityStatus === 'error'" class="text-sm text-error">
-            Could not load your activity.
+          <div
+            v-if="activityStatus === 'error'"
+            class="flex flex-wrap items-center justify-between gap-2"
+            role="alert"
+          >
+            <p class="text-sm text-error">Could not load your activity.</p>
+            <UButton
+              size="sm"
+              color="neutral"
+              variant="outline"
+              @click="refreshActivity()"
+            >
+              Try again
+            </UButton>
+          </div>
+          <p
+            v-else-if="
+              activityStatus === 'idle' || activityStatus === 'pending'
+            "
+            class="text-sm text-muted"
+            role="status"
+          >
+            Loading your activity…
           </p>
-          <ActivityHeatmap v-else :cells="activityCells" />
+          <template v-else>
+            <ActivityHeatmap :cells="activityCells" />
+            <p v-if="!hasActivity" class="text-sm text-muted">
+              No completed workouts in the last 52 weeks yet.
+            </p>
+          </template>
         </div>
       </UCard>
 

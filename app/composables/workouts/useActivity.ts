@@ -11,6 +11,7 @@ export function useActivity() {
   const cells = computed(() =>
     today.value ? heatmapCells(today.value, activeDates.value) : [],
   );
+  const hasActivity = computed(() => activeDates.value.length > 0);
 
   async function refresh() {
     today.value = localDateString();
@@ -26,5 +27,5 @@ export function useActivity() {
     }
   }
 
-  return { cells, status, refresh };
+  return { cells, hasActivity, status, refresh };
 }
