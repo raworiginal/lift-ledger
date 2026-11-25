@@ -8,11 +8,13 @@ import { ensureAdminUser, readAdminConfig } from "../utils/admin-bootstrap";
 import { applyMigrations } from "../utils/db-migrations";
 import { seedExerciseCatalog } from "../utils/exercise-seed";
 import { setStartupTasks } from "../utils/startup-gate";
+import { readSiteUrl } from "../utils/site-url";
 
 const LOCK_SQL = "SELECT pg_advisory_lock(hashtext('lift-ledger-startup'))";
 const UNLOCK_SQL = "SELECT pg_advisory_unlock(hashtext('lift-ledger-startup'))";
 
 async function runStartupTasks(databaseUrl: string | undefined) {
+  readSiteUrl(process.env);
   if (!databaseUrl) {
     throw new Error("Set DATABASE_URL before enabling startup tasks.");
   }

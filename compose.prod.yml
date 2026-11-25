@@ -27,6 +27,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       MIGRATIONS_DATABASE_URL: ""
       NUXT_RUN_STARTUP_TASKS: "true"
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:?Set NUXT_PUBLIC_SITE_URL in .env to the public URL, e.g. https://your-domain}
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
