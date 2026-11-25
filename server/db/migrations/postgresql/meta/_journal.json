@@ -71,6 +71,13 @@
       "when": 1795638854958,
       "tag": "0009_dapper_the_fury",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795642316904,
+      "tag": "0010_windy_starhawk",
+      "breakpoints": true
     }
   ]
 }

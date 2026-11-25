@@ -20,30 +20,18 @@ services:
       retries: 10
     restart: unless-stopped
 
-  migrate:
-    image: raworiginal/lift-ledger:migrate-${IMAGE_TAG:-latest}
-    env_file: .env
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      MIGRATIONS_DATABASE_URL: ""
-    command: ["pnpm", "db:migrate"]
-    depends_on:
-      db:
-        condition: service_healthy
-
   app:
     image: raworiginal/lift-ledger:${IMAGE_TAG:-latest}
     env_file: .env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       MIGRATIONS_DATABASE_URL: ""
+      NUXT_RUN_STARTUP_TASKS: "true"
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
       db:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     restart: unless-stopped
 
 volumes:

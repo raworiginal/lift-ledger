@@ -23,5 +23,12 @@ export default defineNuxtConfig({
       authMode: "email-password",
     },
   },
+  nitro: {
+    serverAssets: [
+      { baseName: "migrations", dir: "./server/db/migrations/postgresql" },
+      { baseName: "seed", dir: "./data/seed" },
+      { baseName: "muscle-images", dir: "./public/images/muscles" },
+    ],
+  },
   css: ["~~/app/assets/css/main.css"],
 });

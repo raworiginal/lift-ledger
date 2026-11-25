@@ -74,11 +74,18 @@ Run migrations as a release/deploy step, not in the application build. Set `NUXT
 
 ### Self-hosting with Docker
 
-`docker-compose.yml` runs three services:
+`docker-compose.yml` runs two services:
 
 - `db`: PostgreSQL 17 with the named volume `postgres-data`. It listens on `127.0.0.1:5432` only.
-- `migrate`: runs `pnpm db:migrate` once and exits. The app does not start until it succeeds.
 - `app`: the Nuxt Node server, built from the `Dockerfile` and listening on `127.0.0.1:3000`.
+
+When `NUXT_RUN_STARTUP_TASKS=true` (set in both compose files), the app prepares its own database before it serves requests. On every start it:
+
+1. Applies any pending migrations from `server/db/migrations/postgresql`, each in its own transaction, under a Postgres advisory lock so concurrent instances cannot race.
+2. Loads the exercise catalog from `data/seed/exercises.json`, skipping the work when the file hasn't changed since the last seed.
+3. Creates the admin from `ADMIN_*` if no such account exists. It leaves an existing admin unchanged.
+
+If any step fails, the app logs the error and exits with a non-zero code. Docker's `restart: unless-stopped` then retries it.
 
 TLS is not handled by this repo. Put a reverse proxy in front of `127.0.0.1:3000` that terminates HTTPS for your domain.
 
@@ -89,16 +96,9 @@ TLS is not handled by this repo. Put a reverse proxy in front of `127.0.0.1:3000
    docker compose up -d --build
    ```
 
-3. Create the initial admin and load the exercise catalog. Run these once, after the first start:
+3. Check that the app is running with `docker compose ps` and `docker compose logs app`. The logs show the migrations applied and the catalog and admin status.
 
-   ```sh
-   docker compose run --rm migrate pnpm auth:setup
-   docker compose run --rm migrate pnpm db:seed:exercises
-   ```
-
-4. Check that the app is running with `docker compose ps` and `docker compose logs app`.
-
-To upgrade, pull the new code and run `docker compose up -d --build` again. The `migrate` service applies new migrations before the app restarts. Rerun `pnpm db:seed:exercises` if the catalog data changed.
+To upgrade, pull the new code and run `docker compose up -d --build` again. New migrations apply before the app starts serving requests.
 
 ### Deploying prebuilt images
 
@@ -111,7 +111,7 @@ docker compose -f compose.prod.yml up -d
 
 - `IMAGE_TAG` in `.env` selects the version. It defaults to `latest` (the newest `main` build). Pin a release with `IMAGE_TAG=0.1.0-alpha.1`.
 - Cut a release by tagging a commit that has passed Quality: `git tag v0.1.0-alpha.1 && git push origin v0.1.0-alpha.1`.
-- Run the one-time admin and seed commands from above with `-f compose.prod.yml` as well.
+- The image runs migrations, catalog seeding, and admin setup on startup, so no separate steps are needed. Use `docker compose -f compose.prod.yml logs app` to check them.
 
 To back up the database:
 
