@@ -8,6 +8,7 @@ const props = defineProps<{
   today: string;
   pending: boolean;
   error?: string;
+  defaultUnit: WorkoutUnit;
 }>();
 
 const emit = defineEmits<{
@@ -18,7 +19,7 @@ const emit = defineEmits<{
 const state = reactive<{ date: string; focus: string; unit: WorkoutUnit }>({
   date: props.defaultDate,
   focus: "",
-  unit: "lb",
+  unit: props.defaultUnit,
 });
 
 const schema = computed(() => startWorkoutSchema(props.today));
@@ -34,7 +35,7 @@ watch(
     if (!open) return;
     state.date = props.defaultDate;
     state.focus = "";
-    state.unit = "lb";
+    state.unit = props.defaultUnit;
   },
 );
 

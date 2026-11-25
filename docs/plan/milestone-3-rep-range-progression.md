@@ -28,16 +28,16 @@ This document is the source of truth for the requirements. Domain terms are defi
 
 Evaluate in this order against the latest session and the user's preferences:
 
-| Status     | Rule                                                                                                      | Message                                   |
-| ---------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `ready`    | Every set has `reps >= repMax`                                                                            | "Next: 85 lb" or "Add weight"             |
-| `below`    | Any set has `reps < repMin`                                                                               | "Below range. Hold or reduce the weight." |
-| `stalled`  | The last 3 same-unit sessions share the working weight and total reps did not increase across them        | "No progress in 3 sessions."              |
-| `building` | Anything else                                                                                             | "Add reps at this weight."                |
+| Status     | Rule                                                                                                               | Message                                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| `ready`    | Every set has `reps >= repMax`                                                                                     | "Next: 85.0 lb" or "Add weight"           |
+| `below`    | Any set has `reps < repMin`                                                                                        | "Below range. Hold or reduce the weight." |
+| `stalled`  | The last 3 same-unit sessions share the working weight and total reps do not increase from one session to the next | "No progress in 3 sessions."              |
+| `building` | Anything else                                                                                                      | "Add reps at this weight."                |
 
 - **Progress:** `totalReps / (setCount × repMax)` for the latest session, capped at `1`.
-- **Suggested weight:** working weight plus `weightStep`, only for `ready` sessions in the main unit. Calculate in hundredths as integers to avoid float drift, then return a decimal string.
-- **Weight history:** the working weight of each same-unit session in the window, oldest first, for the staircase chart.
+- **Suggested weight:** working weight plus `weightStep`, only for `ready` sessions in the main unit. Calculate in hundredths as integers to avoid float drift, then return a decimal string. The shared and API values keep 2 decimals; the UI shows weights with one decimal.
+- **Weight history:** the working weight of each same-unit session in the window, oldest first. The shared logic returns it; no UI uses it yet. Kept for future use.
 
 ## 1. Training preferences
 
@@ -146,9 +146,8 @@ export interface WorkoutProgression {
 None of these fetch data.
 
 - `ProgressionCard.vue`: header with a count of `ready` exercises, a subtitle such as "Range 8–12 · +5 lb" with a Change link to `/app/profile`, the list, and an empty state when nothing was trained in 28 days.
-- `ProgressionRow.vue`: exercise name, working weight and reps (for example `80 lb · 12 · 12 · 11`), `UProgress` bar, a status `UBadge`, and the status message.
-  - Badge colors: `ready` success, `building` primary, `below` warning, `stalled` neutral.
-- `WeightStaircase.vue`: small hand-written SVG step chart of `weightHistory`. No chart library.
+- `ProgressionRow.vue`: exercise name, working weight and reps (for example `80.0 lb · 12 · 12 · 11`), `UProgress` bar, and the status message. No badge or status label; the message carries the status for screen readers.
+- Weights in these components display with one decimal (for example "80.0 lb", "Next: 85.0 lb", "+5.0 lb"), formatted in the presentation layer. A stored value with a second decimal is rounded half up to one place.
 - `StartWorkoutModal.vue`: add a `defaultUnit` prop used when the form resets.
 
 **Profile (`/app/profile`)**
@@ -176,7 +175,7 @@ None of these fetch data.
   - Preferences: GET returns defaults with no row, PUT inserts, a second PUT updates, users cannot read or change each other's preferences, and deleting the user removes the row.
   - Progression: excludes drafts, other users' workouts, and exercises not trained in the window; orders by most recent; returns earlier sessions needed for stall detection.
 - `tests/frontend/`:
-  - `ProgressionRow` shows the correct badge and message for each status.
+  - `ProgressionRow` shows the correct message for each status.
   - `TrainingPreferencesForm` shows validation errors and emits clean values.
   - `StartWorkoutModal` uses `defaultUnit`.
 

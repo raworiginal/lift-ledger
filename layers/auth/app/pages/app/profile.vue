@@ -64,6 +64,7 @@ onMounted(load);
         @submit="submitPassword"
       />
     </div>
+    <ProfileExtraSections />
     <div class="flex flex-col gap-4 p-4">
       <SignInMethodsSection
         :accounts="accounts"

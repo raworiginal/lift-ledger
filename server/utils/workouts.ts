@@ -5,11 +5,13 @@ import {
   desc,
   eq,
   gte,
+  inArray,
   isNotNull,
   isNull,
   lte,
   max,
   ne,
+  or,
   sql,
 } from "drizzle-orm";
 import type { db as hubDb } from "@nuxthub/db";
@@ -29,6 +31,21 @@ import type {
   WorkoutSummary,
   WorkoutUnit,
 } from "../../shared/types/workouts";
+
+// progressionStatus compares the last three same-unit sessions.
+const STALL_LOOKBACK = 3;
+
+export interface RecentExerciseSessionRow {
+  exerciseId: string;
+  name: string;
+  workoutId: string;
+  workoutDate: string;
+  completedAt: Date;
+  unit: WorkoutUnit;
+  position: number;
+  weight: string;
+  reps: number;
+}
 
 export type WorkoutDb = typeof hubDb;
 type WorkoutTx = Parameters<Parameters<WorkoutDb["transaction"]>[0]>[0];
@@ -354,6 +371,84 @@ export async function listActiveDays(
     .orderBy(asc(workouts.workoutDate));
 
   return { activeDates: rows.map((row) => row.workoutDate) };
+}
+
+// Sessions are ranked per exercise and unit so the stall rule's last three
+// same-unit sessions are always present, even when they fall before the window.
+export async function listRecentExerciseSessions(
+  db: WorkoutDb,
+  userId: string,
+  window: { start: string; end: string },
+): Promise<RecentExerciseSessionRow[]> {
+  const ranked = db.$with("ranked").as(
+    db
+      .select({
+        exerciseId: workoutSets.exerciseId,
+        workoutId: workouts.id,
+        workoutDate: workouts.workoutDate,
+        completedAt: workouts.completedAt,
+        unit: workouts.unit,
+        unitRank:
+          sql`row_number() over (partition by ${workoutSets.exerciseId}, ${workouts.unit} order by ${workouts.workoutDate} desc, ${workouts.completedAt} desc, ${workouts.id} desc)`.as(
+            "unit_rank",
+          ),
+      })
+      .from(workoutSets)
+      .innerJoin(workouts, eq(workouts.id, workoutSets.workoutId))
+      .where(
+        and(
+          eq(workouts.userId, userId),
+          isNotNull(workouts.completedAt),
+          lte(workouts.workoutDate, window.end),
+        ),
+      )
+      .groupBy(workoutSets.exerciseId, workouts.id),
+  );
+
+  const trainedInWindow = db
+    .select({ exerciseId: ranked.exerciseId })
+    .from(ranked)
+    .where(gte(ranked.workoutDate, window.start));
+
+  const rows = await db
+    .with(ranked)
+    .select({
+      exerciseId: ranked.exerciseId,
+      name: exercises.nameEn,
+      workoutId: ranked.workoutId,
+      workoutDate: ranked.workoutDate,
+      completedAt: sql<Date>`${ranked.completedAt}`,
+      unit: ranked.unit,
+      position: workoutSets.position,
+      weight: workoutSets.weight,
+      reps: workoutSets.reps,
+    })
+    .from(ranked)
+    .innerJoin(
+      workoutSets,
+      and(
+        eq(workoutSets.workoutId, ranked.workoutId),
+        eq(workoutSets.exerciseId, ranked.exerciseId),
+      ),
+    )
+    .innerJoin(exercises, eq(exercises.id, ranked.exerciseId))
+    .where(
+      and(
+        inArray(ranked.exerciseId, trainedInWindow),
+        or(
+          gte(ranked.workoutDate, window.start),
+          lte(ranked.unitRank, STALL_LOOKBACK),
+        ),
+      ),
+    )
+    .orderBy(
+      desc(ranked.workoutDate),
+      desc(ranked.completedAt),
+      desc(ranked.workoutId),
+      asc(workoutSets.position),
+    );
+
+  return rows;
 }
 
 export async function startDraft(

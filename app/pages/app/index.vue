@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import ActivityHeatmap from "~/components/workouts/presentational/ActivityHeatmap.vue";
+import ProgressionCard from "~/components/workouts/presentational/ProgressionCard.vue";
 import StartWorkoutModal from "~/components/workouts/presentational/StartWorkoutModal.vue";
 import { useActivity } from "~/composables/workouts/useActivity";
 import { useCurrentDraft } from "~/composables/workouts/useCurrentDraft";
+import { useProgression } from "~/composables/workouts/useProgression";
 import { formatWorkoutDate, localDateString } from "~/utils/workout-dates";
 import { readApiError } from "~/utils/workout-errors";
 
@@ -15,6 +17,12 @@ const {
   status: activityStatus,
   refresh: refreshActivity,
 } = useActivity();
+const {
+  preferences,
+  items: progressionItems,
+  status: progressionStatus,
+  refresh: refreshProgression,
+} = useProgression();
 const startOpen = ref(false);
 const startPending = ref(false);
 const startError = ref<string | undefined>();
@@ -22,6 +30,7 @@ const today = ref("");
 
 onMounted(() => {
   today.value = localDateString();
+  refreshProgression();
   refreshActivity();
 });
 
@@ -109,6 +118,13 @@ const shortcuts = computed(() => [
         </div>
       </UCard>
 
+      <ProgressionCard
+        :items="progressionItems"
+        :preferences="preferences"
+        :status="progressionStatus"
+        @retry="refreshProgression()"
+      />
+
       <UCard>
         <div class="space-y-4">
           <div class="space-y-1">
@@ -156,6 +172,7 @@ const shortcuts = computed(() => [
         :today="today"
         :pending="startPending"
         :error="startError"
+        :default-unit="preferences?.unit ?? 'lb'"
         @update:open="startOpen = $event"
         @submit="startWorkout"
       />

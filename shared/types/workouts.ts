@@ -62,3 +62,30 @@ export interface SaveSetInput {
 }
 
 export type SaveState = "idle" | "saving" | "saved" | "failed";
+
+export interface TrainingPreferences {
+  repMin: number;
+  repMax: number;
+  unit: WorkoutUnit;
+  weightStep: string; // decimal string, like set weight
+}
+
+export type ProgressionStatus = "ready" | "building" | "below" | "stalled";
+
+export interface ExerciseProgression {
+  exerciseId: string;
+  name: string;
+  unit: WorkoutUnit; // unit of the latest session
+  lastDate: string; // YYYY-MM-DD
+  workingWeight: string;
+  reps: number[]; // latest session, in set order
+  progress: number; // 0..1
+  status: ProgressionStatus;
+  suggestedWeight: string | null;
+  weightHistory: { date: string; weight: string }[];
+}
+
+export interface WorkoutProgression {
+  preferences: TrainingPreferences;
+  items: ExerciseProgression[];
+}

@@ -51,3 +51,23 @@ _Avoid_: Streak day, training day
 **Heatmap**:
 A grid of the last 52 weeks, with weeks starting on Monday, showing each day as active (filled) or inactive (empty). Each cell is binary: it does not show how many workouts happened that day.
 _Avoid_: Calendar, activity chart
+
+**Rep range**:
+The user's target band of reps per set, from a minimum to a maximum. Applies to every exercise. Defaults to 8 to 12.
+_Avoid_: Rep goal, target reps
+
+**Working weight**:
+The heaviest weight logged for an exercise in one completed workout.
+_Avoid_: Top set, max weight, one-rep max
+
+**Weight step**:
+The amount the working weight goes up when the user is ready to progress, in the main unit. Defaults to 5.
+_Avoid_: Increment, jump, plate size
+
+**Main unit**:
+The unit the user trains in by default, either kg or lb. It sets the default unit for new workouts and the unit that suggested weights use.
+_Avoid_: Preferred unit, default unit
+
+**Progression status**:
+Whether an exercise is ready to add weight, should add reps at the same weight, is below the rep range, or has stalled. Computed from the latest session and the user's current rep range, never stored.
+_Avoid_: Level, grade, score
