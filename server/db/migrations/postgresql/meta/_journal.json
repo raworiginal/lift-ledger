@@ -64,6 +64,13 @@
       "when": 1795634991840,
       "tag": "0008_faithful_wither",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795638854958,
+      "tag": "0009_dapper_the_fury",
+      "breakpoints": true
     }
   ]
 }

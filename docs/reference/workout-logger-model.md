@@ -21,16 +21,17 @@ This file describes what to write, not an implementation. Items marked **(exists
 
 `shared/validation/workouts.ts`
 
-| Export | Input | Output |
-| --- | --- | --- |
-| `WORKOUT_FOCUS_MAX_LENGTH` | constant | `50` |
-| `workoutDateSchema(today: string)` | `YYYY-MM-DD` | rejects non-dates and future dates |
-| `focusSchema` | string | trimmed, 1 to 50 chars |
-| `unitSchema` | string | `"kg" \| "lb"` |
-| `weightInputSchema` | string | up to 2 decimals, `<= 9999.99`, `>= 0` |
-| `repsInputSchema` | string | integer `1` to `100` |
-| `startWorkoutSchema(today: string)` | `{ date, focus, unit }` | same, validated |
-| `workoutSetInputSchema` | `{ weight: string, reps: string }` | `{ weight: number, reps: number }` |
+| Export                              | Input                              | Output                                                                             |
+| ----------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------- |
+| `WORKOUT_FOCUS_MAX_LENGTH`          | constant                           | `50`                                                                               |
+| `workoutDateSchema(today: string)`  | `YYYY-MM-DD`                       | rejects non-dates and future dates                                                 |
+| `focusSchema`                       | string                             | trimmed, 1 to 50 chars                                                             |
+| `unitSchema`                        | string                             | `"kg" \| "lb"`                                                                     |
+| `weightInputSchema`                 | string                             | optional leading `-`, up to 2 decimals, `\|x\| <= 9999.99`                         |
+| `weightEntrySchema`                 | string                             | same as `weightInputSchema`, but rejects a leading `-` (what the set form accepts) |
+| `repsInputSchema`                   | string                             | integer `1` to `100`                                                               |
+| `startWorkoutSchema(today: string)` | `{ date, focus, unit }`            | same, validated                                                                    |
+| `workoutSetInputSchema`             | `{ weight: string, reps: string }` | `{ weight: number, reps: number }`                                                 |
 
 Use `today` from the client's local date. The server must not derive it from UTC.
 
@@ -69,6 +70,7 @@ export interface WorkoutSet {
 export interface WorkoutExerciseGroup {
   exerciseId: string;
   name: string; // catalog name for the user's locale
+  assisted: boolean; // true when weights are zero or negative
   position: number;
   sets: WorkoutSet[]; // ordered by position
 }
@@ -96,6 +98,8 @@ export type SaveState = "idle" | "saving" | "saved" | "failed";
 Notes:
 
 - `weight` is a string on the wire to avoid float drift. Convert with `Number()` only for display.
+- Assisted exercises (`isAssistedExercise`, a whole-word match on `assisted` in `nameEn`) store zero or negative weights. Other exercises store zero or positive weights. The server rejects the wrong sign with 422 on save and update. The database check only bounds the range.
+- The set form takes assistance as a positive number. `assistanceToStored` negates it before the request, and `storedToEntry` reverses it for prefill and edit.
 - `setCount` on `WorkoutSummary` counts sets across all exercises.
 
 ## 2. Server functions
@@ -106,7 +110,10 @@ Errors: throw `createError({ statusCode })` with the codes in the endpoint table
 
 ```ts
 // Reads
-export function getDraft(db: Db, userId: string): Promise<WorkoutSummary | null>;
+export function getDraft(
+  db: Db,
+  userId: string,
+): Promise<WorkoutSummary | null>;
 
 export function listCompletedWorkouts(
   db: Db,
@@ -134,7 +141,12 @@ export function updateWorkout(
   db: Db,
   userId: string,
   workoutId: string,
-  input: { date?: string; focus?: string; unit?: WorkoutUnit; expectedStatus: WorkoutStatus },
+  input: {
+    date?: string;
+    focus?: string;
+    unit?: WorkoutUnit;
+    expectedStatus: WorkoutStatus;
+  },
 ): Promise<WorkoutSummary>;
 // Unit change allowed only if the workout has no sets (409 otherwise).
 
@@ -205,20 +217,20 @@ Do this before allocating positions, counting sets, or changing `completed_at`. 
 
 ### Endpoint table
 
-| Method and path | Function | Success | Errors |
-| --- | --- | --- | --- |
-| `GET /api/workouts/draft` | `getDraft` | `200` `WorkoutSummary \| null` | |
-| `POST /api/workouts` | `startDraft` | `200` (existing) or `201` (new) | `400` validation |
-| `GET /api/workouts?cursor=` | `listCompletedWorkouts` | `200` `CompletedWorkoutPage` | `400` bad cursor |
-| `GET /api/workouts/:id` | `getWorkoutDetail` | `200` `WorkoutDetail` | `404` |
-| `PATCH /api/workouts/:id` | `updateWorkout` | `200` | `404`, `409`, `400` |
-| `DELETE /api/workouts/:id` | `deleteWorkout` | `204` | `404`, `409` |
-| `POST /api/workouts/:id/exercises` | `addExerciseToWorkout` | `200` or `201` | `404` workout, `400` unknown exercise |
-| `DELETE /api/workouts/:id/exercises/:exerciseId` | `removeExerciseFromWorkout` | `204` | `404`, `409` |
-| `POST /api/workouts/:id/sets` | `saveSet` | `200` or `201` | `404`, `409`, `400` |
-| `PATCH /api/workouts/:id/sets/:setId` | `updateSet` | `200` | `404`, `409`, `400` |
-| `DELETE /api/workouts/:id/sets/:setId` | `deleteSet` | `204` | `404`, `409` |
-| `POST /api/workouts/:id/complete` | `completeWorkout` | `200` | `404`, `400` no sets |
+| Method and path                                  | Function                    | Success                         | Errors                                |
+| ------------------------------------------------ | --------------------------- | ------------------------------- | ------------------------------------- |
+| `GET /api/workouts/draft`                        | `getDraft`                  | `200` `WorkoutSummary \| null`  |                                       |
+| `POST /api/workouts`                             | `startDraft`                | `200` (existing) or `201` (new) | `400` validation                      |
+| `GET /api/workouts?cursor=`                      | `listCompletedWorkouts`     | `200` `CompletedWorkoutPage`    | `400` bad cursor                      |
+| `GET /api/workouts/:id`                          | `getWorkoutDetail`          | `200` `WorkoutDetail`           | `404`                                 |
+| `PATCH /api/workouts/:id`                        | `updateWorkout`             | `200`                           | `404`, `409`, `400`                   |
+| `DELETE /api/workouts/:id`                       | `deleteWorkout`             | `204`                           | `404`, `409`                          |
+| `POST /api/workouts/:id/exercises`               | `addExerciseToWorkout`      | `200` or `201`                  | `404` workout, `400` unknown exercise |
+| `DELETE /api/workouts/:id/exercises/:exerciseId` | `removeExerciseFromWorkout` | `204`                           | `404`, `409`                          |
+| `POST /api/workouts/:id/sets`                    | `saveSet`                   | `200` or `201`                  | `404`, `409`, `400`                   |
+| `PATCH /api/workouts/:id/sets/:setId`            | `updateSet`                 | `200`                           | `404`, `409`, `400`                   |
+| `DELETE /api/workouts/:id/sets/:setId`           | `deleteSet`                 | `204`                           | `404`, `409`                          |
+| `POST /api/workouts/:id/complete`                | `completeWorkout`           | `200`                           | `404`, `400` no sets                  |
 
 Editor mutations (`PATCH` and `DELETE` on the workout, sets, and exercises, plus `POST .../exercises` and `POST .../sets`) send `expectedStatus` in the JSON body. `POST /api/workouts` and `POST .../complete` do not, because both are safe to repeat. A `409` on any editor mutation means the status changed elsewhere.
 
@@ -227,7 +239,9 @@ Editor mutations (`PATCH` and `DELETE` on the workout, sets, and exercises, plus
 File: `app/utils/workout-sets.ts` (client) and reused on the server where needed. No I/O.
 
 ```ts
-export function numberSetsWithinExercise(sets: WorkoutSet[]): Array<WorkoutSet & { setNumber: number }>;
+export function numberSetsWithinExercise(
+  sets: WorkoutSet[],
+): Array<WorkoutSet & { setNumber: number }>;
 // Sort by position, then number 1..n per exercise group.
 // Input is already grouped by exercise; numbering restarts per exercise.
 
@@ -236,11 +250,17 @@ export function nextPrefill(
 ): { weight: string; reps: string };
 // Empty strings when lastSaved is null.
 
-export function canFinish(detail: Pick<WorkoutDetail, "status" | "exercises">): boolean;
+export function canFinish(
+  detail: Pick<WorkoutDetail, "status" | "exercises">,
+): boolean;
 // True when status is "draft" and at least one group has sets.
 
 export function lastTimeFor(
-  completed: Array<{ workoutDate: string; completedAt: string; exercises: WorkoutExerciseGroup[] }>,
+  completed: Array<{
+    workoutDate: string;
+    completedAt: string;
+    exercises: WorkoutExerciseGroup[];
+  }>,
   exerciseId: string,
 ): WorkoutExerciseGroup | null;
 // Ignores drafts. Orders by workoutDate, then completedAt. Returns the first match.
@@ -257,7 +277,11 @@ export function useCurrentDraft(): {
   draft: Ref<WorkoutSummary | null>;
   status: Ref<"idle" | "pending" | "success" | "error">;
   refresh: () => Promise<void>;
-  start: (input: { date: string; focus: string; unit: WorkoutUnit }) => Promise<WorkoutSummary>;
+  start: (input: {
+    date: string;
+    focus: string;
+    unit: WorkoutUnit;
+  }) => Promise<WorkoutSummary>;
 };
 
 // useWorkoutHistory.ts
@@ -280,9 +304,16 @@ export function useWorkoutEditor(workoutId: MaybeRefOrGetter<string>): {
   removeExercise: (exerciseId: string) => Promise<void>;
   saveSet: (input: Omit<SaveSetInput, "id">) => Promise<void>; // generates UUID, reuses it on retry
   retrySave: () => Promise<void>;
-  updateSet: (setId: string, input: { weight?: string; reps?: string }) => Promise<void>;
+  updateSet: (
+    setId: string,
+    input: { weight?: string; reps?: string },
+  ) => Promise<void>;
   deleteSet: (setId: string) => Promise<void>;
-  updateMetadata: (input: { date?: string; focus?: string; unit?: WorkoutUnit }) => Promise<void>;
+  updateMetadata: (input: {
+    date?: string;
+    focus?: string;
+    unit?: WorkoutUnit;
+  }) => Promise<void>;
   complete: () => Promise<void>;
   discard: () => Promise<void>;
 };
@@ -299,15 +330,15 @@ Rules for the editor composable:
 
 Directory: `app/components/workouts/presentational/`. Props in, events out. No `$fetch`, `useFetch`, or composables.
 
-| Component | Props | Emits |
-| --- | --- | --- |
-| `StartWorkoutModal.vue` | `open: boolean`, `defaultDate: string`, `today: string`, `pending: boolean`, `error?: string` | `submit: [{ date, focus, unit }]`, `close: []` |
-| `WorkoutHeader.vue` | `workoutDate`, `focus`, `unit`, `status`, `canEditUnit: boolean` | `edit: [patch]`, `finish: []`, `discard: []` |
-| `ExercisePicker.vue` | `results: ExerciseOption[]`, `query: string`, `loading: boolean` | `search: [query: string]`, `select: [exerciseId: string]` |
-| `ExerciseGroup.vue` | `name`, `sets: WorkoutSet[]` (already numbered), `selected: boolean` | `select: []`, `remove: []`, `editSet: [setId]`, `deleteSet: [setId]` |
-| `SetEntryForm.vue` | `prefill: { weight: string; reps: string }`, `unit`, `state: SaveState` | `add: [{ weight, reps }]`, `retry: []` |
-| `SetRow.vue` | `set: WorkoutSet & { setNumber }`, `unit`, `editing: boolean` | `edit: []`, `save: [{ weight, reps }]`, `cancel: []`, `delete: []` |
-| `WorkoutHistoryList.vue` | `items: WorkoutSummary[]`, `hasMore: boolean`, `loading: boolean` | `loadMore: []`, `open: [id]` |
+| Component                | Props                                                                                         | Emits                                                                |
+| ------------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `StartWorkoutModal.vue`  | `open: boolean`, `defaultDate: string`, `today: string`, `pending: boolean`, `error?: string` | `submit: [{ date, focus, unit }]`, `close: []`                       |
+| `WorkoutHeader.vue`      | `workoutDate`, `focus`, `unit`, `status`, `canEditUnit: boolean`                              | `edit: [patch]`, `finish: []`, `discard: []`                         |
+| `ExercisePicker.vue`     | `results: ExerciseOption[]`, `query: string`, `loading: boolean`                              | `search: [query: string]`, `select: [exerciseId: string]`            |
+| `ExerciseGroup.vue`      | `name`, `sets: WorkoutSet[]` (already numbered), `selected: boolean`                          | `select: []`, `remove: []`, `editSet: [setId]`, `deleteSet: [setId]` |
+| `SetEntryForm.vue`       | `prefill: { weight: string; reps: string }`, `unit`, `state: SaveState`                       | `add: [{ weight, reps }]`, `retry: []`                               |
+| `SetRow.vue`             | `set: WorkoutSet & { setNumber }`, `unit`, `editing: boolean`                                 | `edit: []`, `save: [{ weight, reps }]`, `cancel: []`, `delete: []`   |
+| `WorkoutHistoryList.vue` | `items: WorkoutSummary[]`, `hasMore: boolean`, `loading: boolean`                             | `loadMore: []`, `open: [id]`                                         |
 
 Keep local UI state only: the text being typed, and whether a row is in edit mode. Labels and `inputmode` attributes live here:
 
@@ -316,11 +347,11 @@ Keep local UI state only: the text being typed, and whether a row is in edit mod
 
 ## 6. Pages
 
-| Page | Container responsibilities |
-| --- | --- |
-| `app/pages/app/index.vue` | `useCurrentDraft`. Shows Start Workout or Resume Workout, and Workout History. |
-| `app/pages/app/workouts/index.vue` | `useWorkoutHistory`. Renders `WorkoutHistoryList`. |
-| `app/pages/app/workouts/[id].vue` | `useWorkoutEditor(id)`. Validates `id` as a UUID before fetching. Read-only when `status === "completed"` unless edit mode is on. |
+| Page                               | Container responsibilities                                                                                                        |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `app/pages/app/index.vue`          | `useCurrentDraft`. Shows Start Workout or Resume Workout, and Workout History.                                                    |
+| `app/pages/app/workouts/index.vue` | `useWorkoutHistory`. Renders `WorkoutHistoryList`.                                                                                |
+| `app/pages/app/workouts/[id].vue`  | `useWorkoutEditor(id)`. Validates `id` as a UUID before fetching. Read-only when `status === "completed"` unless edit mode is on. |
 
 ## 7. Shared decisions to keep in mind
 

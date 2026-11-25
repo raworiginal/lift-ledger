@@ -37,11 +37,15 @@ const exerciseIds: string[] = [];
 
 const today = "2026-11-20";
 
+let assistedExerciseId: string;
+
 before(async () => {
   const opened = await openTestDatabase();
   client = opened.client;
   db = opened.db;
   exerciseIds.push(await createExercise(db), await createExercise(db));
+  assistedExerciseId = await createExercise(db, "Assisted Pull Ups");
+  exerciseIds.push(assistedExerciseId);
 });
 
 after(async () => {
@@ -728,4 +732,137 @@ test("active days include only the user's completed workouts inside the window",
   const activity = await listActiveDays(db, userId, window);
 
   assert.deepEqual(activity.activeDates, [window.start, today, "2026-11-22"]);
+});
+
+test("regular exercises reject negative weights and accept zero", async () => {
+  const userId = await newUser();
+  const workout = await startWorkout(userId);
+  await addExerciseToWorkout(db, userId, workout.id, {
+    exerciseId: exerciseIds[0],
+    expectedStatus: "draft",
+  });
+
+  await expectWorkoutError(
+    saveSet(db, userId, workout.id, {
+      id: randomUUID(),
+      exerciseId: exerciseIds[0],
+      weight: "-5",
+      reps: "8",
+      expectedStatus: "draft",
+    }),
+    422,
+  );
+
+  const zero = await saveSet(db, userId, workout.id, {
+    id: randomUUID(),
+    exerciseId: exerciseIds[0],
+    weight: "0",
+    reps: "8",
+    expectedStatus: "draft",
+  });
+  assert.equal(zero.set.weight, "0.00");
+});
+
+test("assisted exercises store negative weights and reject positive ones", async () => {
+  const userId = await newUser();
+  const workout = await startWorkout(userId);
+  await addExerciseToWorkout(db, userId, workout.id, {
+    exerciseId: assistedExerciseId,
+    expectedStatus: "draft",
+  });
+
+  await expectWorkoutError(
+    saveSet(db, userId, workout.id, {
+      id: randomUUID(),
+      exerciseId: assistedExerciseId,
+      weight: "5",
+      reps: "8",
+      expectedStatus: "draft",
+    }),
+    422,
+  );
+
+  const saved = await saveSet(db, userId, workout.id, {
+    id: randomUUID(),
+    exerciseId: assistedExerciseId,
+    weight: "-20",
+    reps: "8",
+    expectedStatus: "draft",
+  });
+  assert.equal(saved.set.weight, "-20.00");
+
+  const detail = await getWorkoutDetail(db, userId, workout.id);
+  const group = detail?.exercises.find(
+    (item) => item.exerciseId === assistedExerciseId,
+  );
+  assert.equal(group?.assisted, true);
+  assert.equal(group?.sets[0]?.weight, "-20.00");
+});
+
+test("updating a set keeps the sign rule for its exercise", async () => {
+  const userId = await newUser();
+  const workout = await startWorkout(userId);
+  await addExerciseToWorkout(db, userId, workout.id, {
+    exerciseId: exerciseIds[0],
+    expectedStatus: "draft",
+  });
+  await addExerciseToWorkout(db, userId, workout.id, {
+    exerciseId: assistedExerciseId,
+    expectedStatus: "draft",
+  });
+  const regular = await saveSet(db, userId, workout.id, {
+    id: randomUUID(),
+    exerciseId: exerciseIds[0],
+    weight: "60",
+    reps: "8",
+    expectedStatus: "draft",
+  });
+  const assisted = await saveSet(db, userId, workout.id, {
+    id: randomUUID(),
+    exerciseId: assistedExerciseId,
+    weight: "-20",
+    reps: "8",
+    expectedStatus: "draft",
+  });
+
+  await expectWorkoutError(
+    updateSet(db, userId, workout.id, regular.set.id, {
+      weight: "-10",
+      expectedStatus: "draft",
+    }),
+    422,
+  );
+  await expectWorkoutError(
+    updateSet(db, userId, workout.id, assisted.set.id, {
+      weight: "5",
+      expectedStatus: "draft",
+    }),
+    422,
+  );
+
+  const updated = await updateSet(db, userId, workout.id, assisted.set.id, {
+    weight: "-15",
+    expectedStatus: "draft",
+  });
+  assert.equal(updated.weight, "-15.00");
+});
+
+test("the database rejects weights outside the stored range", async () => {
+  const userId = await newUser();
+  const workout = await startWorkout(userId);
+  await addExerciseToWorkout(db, userId, workout.id, {
+    exerciseId: assistedExerciseId,
+    expectedStatus: "draft",
+  });
+
+  await assert.rejects(
+    db.insert(workoutSets).values({
+      id: randomUUID(),
+      workoutId: workout.id,
+      exerciseId: assistedExerciseId,
+      position: 1,
+      weight: "-10000",
+      reps: 8,
+    }),
+  );
 });

@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import type { WorkoutSet, WorkoutUnit } from "~~/shared/types/workouts";
 import {
+  assistanceToStored,
+  storedToEntry,
+} from "~~/shared/exercises/assisted";
+import {
   repsInputSchema,
-  weightInputSchema,
+  weightEntrySchema,
 } from "~~/shared/validation/workouts";
+import { formatSetWeight } from "~/utils/format-weight";
 import { firstIssueMessage } from "~/utils/workout-errors";
 
 const props = defineProps<{
   set: WorkoutSet;
   unit: WorkoutUnit;
+  assisted?: boolean;
   editable: boolean;
   editing: boolean;
   disabled?: boolean;
@@ -29,7 +35,7 @@ watch(
   () => props.editing,
   (editing) => {
     if (!editing) return;
-    weight.value = String(Number(props.set.weight));
+    weight.value = storedToEntry(props.set.weight, props.assisted ?? false);
     reps.value = String(props.set.reps);
     showErrors.value = false;
   },
@@ -37,7 +43,7 @@ watch(
 
 const weightError = computed(() =>
   showErrors.value
-    ? firstIssueMessage(weightInputSchema, weight.value)
+    ? firstIssueMessage(weightEntrySchema, weight.value)
     : undefined,
 );
 const repsError = computed(() =>
@@ -47,7 +53,10 @@ const repsError = computed(() =>
 function submit() {
   showErrors.value = true;
   if (weightError.value || repsError.value) return;
-  emit("save", { weight: weight.value.trim(), reps: reps.value.trim() });
+  emit("save", {
+    weight: assistanceToStored(weight.value.trim(), props.assisted ?? false),
+    reps: reps.value.trim(),
+  });
 }
 </script>
 
@@ -58,7 +67,8 @@ function submit() {
     <template v-if="!editing">
       <span class="w-14 text-sm text-muted">Set {{ set.setNumber }}</span>
       <span class="flex-1 font-medium text-highlighted tabular-nums">
-        {{ Number(set.weight) }} {{ unit }} × {{ set.reps }}
+        {{ formatSetWeight(set.weight, unit, assisted ?? false) }} ×
+        {{ set.reps }}
       </span>
       <div v-if="editable" class="flex gap-1">
         <UButton
@@ -92,7 +102,11 @@ function submit() {
       @submit.prevent="submit"
     >
       <span class="w-14 pt-2 text-sm text-muted">Set {{ set.setNumber }}</span>
-      <UFormField label="Weight" :error="weightError" class="w-28">
+      <UFormField
+        :label="assisted ? 'Assistance' : 'Weight'"
+        :error="weightError"
+        class="w-28"
+      >
         <UInput
           v-model="weight"
           type="text"

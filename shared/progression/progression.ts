@@ -1,4 +1,5 @@
 import { addDays } from "../activity/heatmap";
+import { isAssistedExercise } from "../exercises/assisted";
 import type {
   ExerciseProgression,
   ProgressionStatus,
@@ -41,7 +42,8 @@ export function progressionWindow(today: string): {
 export function summarizeSession(sets: ProgressionSet[]): SessionSummary {
   if (sets.length === 0) throw new Error("A session needs at least one set");
 
-  let heaviest = 0;
+  // Assistance is stored as negative, so the highest value is the least assisted set.
+  let heaviest = Number.NEGATIVE_INFINITY;
   for (const set of sets) {
     heaviest = Math.max(heaviest, toHundredths(set.weight));
   }
@@ -70,16 +72,19 @@ export function progressionStatus(
 }
 
 export function suggestedWeight(
-  session: Pick<ExerciseSession, "unit" | "sets">,
+  session: Pick<ExerciseSession, "name" | "unit" | "sets">,
   preferences: TrainingPreferences,
 ): string | null {
   if (session.unit !== preferences.unit) return null;
   if (!allSetsReach(session.sets, preferences.repMax)) return null;
 
   const { workingWeight } = summarizeSession(session.sets);
-  return fromHundredths(
-    toHundredths(workingWeight) + toHundredths(preferences.weightStep),
-  );
+  const current = toHundredths(workingWeight);
+  const next = current + toHundredths(preferences.weightStep);
+
+  if (!isAssistedExercise(session.name)) return fromHundredths(next);
+  if (current >= 0) return null;
+  return fromHundredths(Math.min(next, 0));
 }
 
 export function buildExerciseProgression(
@@ -105,6 +110,7 @@ export function buildExerciseProgression(
     exerciseId: latest.exerciseId,
     name: latest.name,
     unit: latest.unit,
+    assisted: isAssistedExercise(latest.name),
     lastDate: latest.date,
     workingWeight: summary.workingWeight,
     reps: summary.reps,

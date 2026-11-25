@@ -100,6 +100,19 @@ TLS is not handled by this repo. Put a reverse proxy in front of `127.0.0.1:3000
 
 To upgrade, pull the new code and run `docker compose up -d --build` again. The `migrate` service applies new migrations before the app restarts. Rerun `pnpm db:seed:exercises` if the catalog data changed.
 
+### Deploying prebuilt images
+
+GitHub Actions publishes images to Docker Hub (`raworiginal/lift-ledger`) after the Quality workflow passes on `main`, and for every `v*` tag. `compose.prod.yml` pulls those images instead of building on the server, so you only need that file and `.env` on the host:
+
+```sh
+docker compose -f compose.prod.yml pull
+docker compose -f compose.prod.yml up -d
+```
+
+- `IMAGE_TAG` in `.env` selects the version. It defaults to `latest` (the newest `main` build). Pin a release with `IMAGE_TAG=0.1.0-alpha.1`.
+- Cut a release by tagging a commit that has passed Quality: `git tag v0.1.0-alpha.1 && git push origin v0.1.0-alpha.1`.
+- Run the one-time admin and seed commands from above with `-f compose.prod.yml` as well.
+
 To back up the database:
 
 ```sh

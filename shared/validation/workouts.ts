@@ -44,11 +44,21 @@ export const weightInputSchema = z
   .string()
   .trim()
   .min(1, "Weight is required")
-  .regex(/^\d+(\.\d{1,2})?$/, "Weight must be a number with up to two decimals")
+  .regex(
+    /^-?\d+(\.\d{1,2})?$/,
+    "Weight must be a number with up to two decimals",
+  )
   .refine(
-    (value) => Number(value) <= 9999.99,
-    "Weight must be 9999.99 or less",
+    (value) => Math.abs(Number(value)) <= 9999.99,
+    "Weight must be between -9999.99 and 9999.99",
   );
+
+// What people type into the set form. Assisted exercises are entered as a
+// positive amount and stored as negative, so a typed minus sign is never valid.
+export const weightEntrySchema = weightInputSchema.refine(
+  (value) => !value.startsWith("-"),
+  "Enter a positive number",
+);
 
 export const repsInputSchema = z
   .string()

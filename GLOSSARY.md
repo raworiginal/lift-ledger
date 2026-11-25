@@ -32,11 +32,19 @@ _Avoid_: Category, tag, muscle group
 The unit of weight for a workout, either kg or lb. It can't change once the workout has sets.
 _Avoid_: System, measurement
 
+**Assistance**:
+Weight taken off by a machine or band on an assisted exercise. Entered as a positive amount and stored as a negative weight, so a set of 20 assistance is stored as -20. Shown as "20 lb assist", or "Bodyweight" at zero.
+_Avoid_: Negative weight, counterweight, offset
+
 ## Exercises
 
 **Catalog**:
 The shared list of exercises available to every user. Users pick exercises from it but don't edit it.
 _Avoid_: Library, exercise list, database
+
+**Assisted exercise**:
+A catalog exercise whose English name contains the word "assisted", such as "Assisted Pull Ups". Its sets hold zero or negative weights (assistance). Every other exercise holds zero or positive weights.
+_Avoid_: Machine exercise, assist exercise
 
 **Last time**:
 The most recent completed workout that contains a given exercise, and the sets logged in it. Drafts never count.
@@ -57,11 +65,11 @@ The user's target band of reps per set, from a minimum to a maximum. Applies to 
 _Avoid_: Rep goal, target reps
 
 **Working weight**:
-The heaviest weight logged for an exercise in one completed workout.
+The heaviest weight logged for an exercise in one completed workout. For an assisted exercise, this is the least assistance used.
 _Avoid_: Top set, max weight, one-rep max
 
 **Weight step**:
-The amount the working weight goes up when the user is ready to progress, in the main unit. Defaults to 5.
+The amount the working weight goes up when the user is ready to progress, in the main unit. Defaults to 5. For an assisted exercise, the working weight moves toward zero assistance and stops at bodyweight.
 _Avoid_: Increment, jump, plate size
 
 **Main unit**:

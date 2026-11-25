@@ -194,6 +194,7 @@ function prefillSourceFor(exerciseId: string) {
           :key="group.exerciseId"
           :exercise-id="group.exerciseId"
           :name="group.name"
+          :assisted="group.assisted"
           :sets="group.sets"
           :unit="detail.unit"
           :last-time="group.lastTime"

@@ -90,7 +90,10 @@ export const workoutSets = pgTable(
       table.workoutId,
       table.position,
     ),
-    check("workout_sets_weight_check", sql`${table.weight} >= 0`),
+    check(
+      "workout_sets_weight_check",
+      sql`${table.weight} >= -9999.99 and ${table.weight} <= 9999.99`,
+    ),
     check(
       "workout_sets_reps_check",
       sql`${table.reps} > 0 and ${table.reps} <= 100`,

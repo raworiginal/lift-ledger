@@ -13,6 +13,7 @@ import SetRow from "./SetRow.vue";
 defineProps<{
   exerciseId: string;
   name: string;
+  assisted?: boolean;
   sets: WorkoutSet[];
   unit: WorkoutUnit;
   lastTime: LastTime | null;
@@ -70,6 +71,7 @@ const emit = defineEmits<{
           :key="set.id"
           :set="set"
           :unit="unit"
+          :assisted="assisted"
           :editable="editable"
           :editing="editingSetId === set.id"
           :disabled="disabled"
@@ -85,12 +87,14 @@ const emit = defineEmits<{
         v-if="editable && lastTime"
         :sets="lastTime.sets"
         :unit="lastTime.unit"
+        :assisted="assisted"
       />
       <SetEntryForm
         v-if="editable"
         :prefill="prefill"
         :prefill-source-id="prefillSourceId"
         :unit="unit"
+        :assisted="assisted"
         :state="saveState"
         :error="saveError"
         :disabled="disabled"

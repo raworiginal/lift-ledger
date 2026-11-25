@@ -35,6 +35,7 @@ export interface LastTime {
 export interface WorkoutExerciseGroup {
   exerciseId: string;
   name: string;
+  assisted: boolean;
   position: number;
   sets: WorkoutSet[];
   lastTime: LastTime | null;
@@ -76,6 +77,7 @@ export interface ExerciseProgression {
   exerciseId: string;
   name: string;
   unit: WorkoutUnit; // unit of the latest session
+  assisted: boolean; // weights are zero or negative (assistance)
   lastDate: string; // YYYY-MM-DD
   workingWeight: string;
   reps: number[]; // latest session, in set order

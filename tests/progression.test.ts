@@ -237,6 +237,75 @@ test("suggested weight is null unless the session is ready", () => {
   assert.equal(suggestedWeight(session([12, 11]), preferences), null);
 });
 
+test("working weight for an assisted session is the least assisted set", () => {
+  const mixed = [
+    { weight: "-30", reps: 10 },
+    { weight: "-20", reps: 8 },
+    { weight: "-25", reps: 8 },
+  ];
+  assert.equal(summarizeSession(mixed).workingWeight, "-20.00");
+});
+
+test("working weight for a session with zero assistance is zero", () => {
+  const bodyweight = session([10, 10], { weight: "0", name: "Assisted Dips" });
+  assert.equal(summarizeSession(bodyweight.sets).workingWeight, "0.00");
+});
+
+test("suggested weight for assisted exercises moves toward zero and stops there", () => {
+  const assistedPreferences = { ...preferences, weightStep: "5" };
+  assert.equal(
+    suggestedWeight(
+      session([12, 12], { name: "Assisted Dips", weight: "-30" }),
+      assistedPreferences,
+    ),
+    "-25.00",
+  );
+  assert.equal(
+    suggestedWeight(
+      session([12, 12], { name: "Assisted Dips", weight: "-2.5" }),
+      assistedPreferences,
+    ),
+    "0.00",
+  );
+});
+
+test("suggested weight is null for assisted exercises already at bodyweight", () => {
+  assert.equal(
+    suggestedWeight(
+      session([12, 12], { name: "Assisted Dips", weight: "0" }),
+      preferences,
+    ),
+    null,
+  );
+});
+
+test("progression marks assisted exercises and keeps their suggestion negative", () => {
+  const progression = buildExerciseProgression(
+    [
+      session([12, 12, 12], {
+        name: "Machine Assisted Dips",
+        weight: "-30",
+      }),
+    ],
+    { ...preferences, weightStep: "5" },
+    progressionWindow("2026-11-25"),
+  );
+
+  assert.equal(progression.assisted, true);
+  assert.equal(progression.workingWeight, "-30.00");
+  assert.equal(progression.suggestedWeight, "-25.00");
+});
+
+test("progression does not mark regular exercises as assisted", () => {
+  const progression = buildExerciseProgression(
+    [session([12, 12, 12])],
+    preferences,
+    progressionWindow("2026-11-25"),
+  );
+
+  assert.equal(progression.assisted, false);
+});
+
 test("suggested weight is null when the session unit differs from the main unit", () => {
   assert.equal(
     suggestedWeight(session([12, 12], { unit: "kg" }), preferences),

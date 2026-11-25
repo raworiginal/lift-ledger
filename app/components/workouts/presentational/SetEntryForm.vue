@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import type { SaveState, WorkoutUnit } from "~~/shared/types/workouts";
 import {
+  assistanceToStored,
+  storedToEntry,
+} from "~~/shared/exercises/assisted";
+import {
   repsInputSchema,
-  weightInputSchema,
+  weightEntrySchema,
 } from "~~/shared/validation/workouts";
 import { firstIssueMessage } from "~/utils/workout-errors";
 
@@ -10,6 +14,7 @@ const props = defineProps<{
   prefill: { weight: string; reps: string };
   prefillSourceId: string | null;
   unit: WorkoutUnit;
+  assisted?: boolean;
   state: SaveState;
   error?: string | null;
   disabled?: boolean;
@@ -19,11 +24,15 @@ const emit = defineEmits<{
   add: [values: { weight: string; reps: string }];
 }>();
 
-const weight = ref(props.prefill.weight);
+const weight = ref(entryWeight(props.prefill.weight));
 const reps = ref(props.prefill.reps);
 const showErrors = ref(false);
 const edited = ref(false);
 const submitted = ref<{ weight: string; reps: string } | null>(null);
+
+function entryWeight(stored: string): string {
+  return stored === "" ? "" : storedToEntry(stored, props.assisted ?? false);
+}
 
 function markEdited() {
   edited.value = true;
@@ -33,7 +42,7 @@ watch(
   () => props.prefillSourceId,
   () => {
     if (edited.value) return;
-    weight.value = props.prefill.weight;
+    weight.value = entryWeight(props.prefill.weight);
     reps.value = props.prefill.reps;
   },
 );
@@ -51,7 +60,7 @@ watch(
 
 const weightError = computed(() =>
   showErrors.value
-    ? firstIssueMessage(weightInputSchema, weight.value)
+    ? firstIssueMessage(weightEntrySchema, weight.value)
     : undefined,
 );
 const repsError = computed(() =>
@@ -63,16 +72,23 @@ const failed = computed(() => props.state === "failed");
 function submit() {
   showErrors.value = true;
   if (weightError.value || repsError.value) return;
-  const values = { weight: weight.value.trim(), reps: reps.value.trim() };
-  submitted.value = values;
-  emit("add", values);
+  const entry = { weight: weight.value.trim(), reps: reps.value.trim() };
+  submitted.value = entry;
+  emit("add", {
+    weight: assistanceToStored(entry.weight, props.assisted ?? false),
+    reps: entry.reps,
+  });
 }
 </script>
 
 <template>
   <form class="space-y-3 rounded-md bg-elevated p-3" @submit.prevent="submit">
     <div class="flex flex-wrap items-start gap-3">
-      <UFormField :label="`Weight (${unit})`" :error="weightError" class="w-32">
+      <UFormField
+        :label="assisted ? `Assistance (${unit})` : `Weight (${unit})`"
+        :error="weightError"
+        class="w-32"
+      >
         <UInput
           v-model="weight"
           type="text"

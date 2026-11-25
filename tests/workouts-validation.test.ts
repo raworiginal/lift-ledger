@@ -4,6 +4,7 @@ import {
   focusSchema,
   repsInputSchema,
   unitSchema,
+  weightEntrySchema,
   weightInputSchema,
   workoutDateSchema,
   workoutSetInputSchema,
@@ -60,9 +61,27 @@ test("weight rejects blank input instead of treating it as zero", () => {
   assert.equal(weightInputSchema.safeParse("   ").success, false);
 });
 
-test("weight rejects negative values and accepts zero", () => {
-  assert.equal(weightInputSchema.safeParse("-5").success, false);
+test("weight accepts negative values for assistance and zero", () => {
+  assert.equal(weightInputSchema.safeParse("-5").success, true);
+  assert.equal(weightInputSchema.safeParse("-20.50").success, true);
   assert.equal(weightInputSchema.safeParse("0").success, true);
+});
+
+test("weight rejects a bare or doubled minus sign and a minus after digits", () => {
+  assert.equal(weightInputSchema.safeParse("-").success, false);
+  assert.equal(weightInputSchema.safeParse("--5").success, false);
+  assert.equal(weightInputSchema.safeParse("5-").success, false);
+});
+
+test("weight range is symmetric around zero", () => {
+  assert.equal(weightInputSchema.safeParse("-9999.99").success, true);
+  assert.equal(weightInputSchema.safeParse("-10000").success, false);
+});
+
+test("weight entry rejects a typed minus sign", () => {
+  assert.equal(weightEntrySchema.safeParse("20").success, true);
+  assert.equal(weightEntrySchema.safeParse("0").success, true);
+  assert.equal(weightEntrySchema.safeParse("-20").success, false);
 });
 
 test("weight rejects more than two decimal places", () => {

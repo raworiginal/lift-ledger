@@ -32,6 +32,43 @@ describe("SetEntryForm", () => {
     expect(wrapper.emitted("add")).toEqual([[{ weight: "135", reps: "8" }]]);
   });
 
+  it("stores assistance as a negative weight", async () => {
+    const wrapper = await mountForm({
+      prefill: { weight: "", reps: "" },
+      assisted: true,
+    });
+
+    await inputs(wrapper)[0]!.setValue("20");
+    await inputs(wrapper)[1]!.setValue("8");
+    await wrapper.find("form").trigger("submit");
+
+    expect(wrapper.emitted("add")).toEqual([[{ weight: "-20", reps: "8" }]]);
+  });
+
+  it("does not accept a typed minus sign for assistance", async () => {
+    const wrapper = await mountForm({
+      prefill: { weight: "", reps: "" },
+      assisted: true,
+    });
+
+    await inputs(wrapper)[0]!.setValue("-20");
+    await inputs(wrapper)[1]!.setValue("8");
+    await wrapper.find("form").trigger("submit");
+
+    expect(wrapper.emitted("add")).toBeUndefined();
+    expect(wrapper.text()).toContain("Enter a positive number");
+  });
+
+  it("shows a prefilled negative weight as positive assistance", async () => {
+    const wrapper = await mountForm({
+      prefill: { weight: "-25.00", reps: "10" },
+      assisted: true,
+    });
+
+    expect(inputs(wrapper)[0]!.element.value).toBe("25");
+    expect(wrapper.text()).toContain("Assistance (lb)");
+  });
+
   it("does not submit invalid values", async () => {
     const wrapper = await mountForm({ prefill: { weight: "", reps: "" } });
 

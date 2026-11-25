@@ -3,7 +3,7 @@ import type {
   ExerciseProgression,
   ProgressionStatus,
 } from "~~/shared/types/workouts";
-import { formatWeightOneDecimal } from "~/utils/format-weight";
+import { formatSetWeight, formatWeightOneDecimal } from "~/utils/format-weight";
 
 const props = defineProps<{
   item: ExerciseProgression;
@@ -15,11 +15,27 @@ const messages: Record<Exclude<ProgressionStatus, "ready">, string> = {
   building: "Add reps at this weight.",
 };
 
+const workingWeight = computed(() =>
+  formatSetWeight(
+    props.item.workingWeight,
+    props.item.unit,
+    props.item.assisted,
+    formatWeightOneDecimal,
+  ),
+);
+
 const message = computed(() => {
   if (props.item.status !== "ready") return messages[props.item.status];
-  return props.item.suggestedWeight
-    ? `Next: ${formatWeightOneDecimal(props.item.suggestedWeight)} ${props.item.unit}`
-    : "Add weight";
+  if (props.item.suggestedWeight) {
+    const next = formatSetWeight(
+      props.item.suggestedWeight,
+      props.item.unit,
+      props.item.assisted,
+      formatWeightOneDecimal,
+    );
+    return `Next: ${next}`;
+  }
+  return props.item.assisted ? "Bodyweight reached." : "Add weight";
 });
 </script>
 
@@ -28,8 +44,7 @@ const message = computed(() => {
     <div class="flex flex-wrap items-baseline justify-between gap-2">
       <h3 class="font-medium text-highlighted">{{ item.name }}</h3>
       <p class="text-sm tabular-nums text-muted">
-        {{ formatWeightOneDecimal(item.workingWeight) }} {{ item.unit }} ·
-        {{ item.reps.join(" · ") }}
+        {{ workingWeight }} · {{ item.reps.join(" · ") }}
       </p>
     </div>
     <UProgress

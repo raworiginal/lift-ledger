@@ -19,6 +19,10 @@ import { z } from "zod";
 import { exercises } from "../db/schema/exercises";
 import { workoutExercises, workouts, workoutSets } from "../db/schema/workouts";
 import { numberSetsWithinExercise } from "../../app/utils/workout-sets";
+import {
+  isAssistedExercise,
+  weightFitsExercise,
+} from "../../shared/exercises/assisted";
 import { localDateSchema } from "../../shared/validation/workouts";
 import type {
   CompletedWorkoutPage,
@@ -52,9 +56,9 @@ type WorkoutTx = Parameters<Parameters<WorkoutDb["transaction"]>[0]>[0];
 type Reader = Pick<WorkoutDb, "select">;
 
 export class WorkoutError extends Error {
-  readonly statusCode: 400 | 404 | 409;
+  readonly statusCode: 400 | 404 | 409 | 422;
 
-  constructor(statusCode: 400 | 404 | 409, message: string) {
+  constructor(statusCode: 400 | 404 | 409 | 422, message: string) {
     super(message);
     this.name = "WorkoutError";
     this.statusCode = statusCode;
@@ -62,6 +66,13 @@ export class WorkoutError extends Error {
 }
 
 const notFound = () => new WorkoutError(404, "Workout not found.");
+const invalidWeightSign = (assisted: boolean) =>
+  new WorkoutError(
+    422,
+    assisted
+      ? "Assisted exercises need a weight of zero or less."
+      : "Weight cannot be negative for this exercise.",
+  );
 const statusChanged = () =>
   new WorkoutError(
     409,
@@ -243,7 +254,11 @@ async function loadGroup(
     .limit(1);
 
   if (!row) return null;
-  return { ...row, sets: await loadSets(reader, workoutId, exerciseId) };
+  return {
+    ...row,
+    assisted: isAssistedExercise(row.name),
+    sets: await loadSets(reader, workoutId, exerciseId),
+  };
 }
 
 const cursorSchema = z.tuple([localDateSchema, z.iso.datetime(), z.uuid()]);
@@ -345,6 +360,7 @@ export async function getWorkoutDetail(
       groupRows.map((group) =>
         withLastTime(db, userId, workoutId, {
           ...group,
+          assisted: isAssistedExercise(group.name),
           sets: sets.filter((set) => set.exerciseId === group.exerciseId),
         }),
       ),
@@ -417,7 +433,9 @@ export async function listRecentExerciseSessions(
       name: exercises.nameEn,
       workoutId: ranked.workoutId,
       workoutDate: ranked.workoutDate,
-      completedAt: sql<Date>`${ranked.completedAt}`,
+      completedAt: sql<Date>`${ranked.completedAt}`.mapWith(
+        workouts.completedAt,
+      ),
       unit: ranked.unit,
       position: workoutSets.position,
       weight: workoutSets.weight,
@@ -628,6 +646,9 @@ export async function saveSet(
 
     const group = await loadGroup(tx, workoutId, input.exerciseId);
     if (!group) throw new WorkoutError(404, "Exercise not found in workout.");
+    if (!weightFitsExercise(input.weight, group.assisted)) {
+      throw invalidWeightSign(group.assisted);
+    }
 
     const [{ value } = { value: 0 }] = await tx
       .select({ value: max(workoutSets.position) })
@@ -688,13 +709,23 @@ export async function updateSet(
       .select({
         id: workoutSets.id,
         exerciseId: workoutSets.exerciseId,
+        name: exercises.nameEn,
       })
       .from(workoutSets)
+      .innerJoin(exercises, eq(exercises.id, workoutSets.exerciseId))
       .where(
         and(eq(workoutSets.id, setId), eq(workoutSets.workoutId, workoutId)),
       )
       .limit(1);
     if (!existing) throw new WorkoutError(404, "Set not found.");
+
+    const assisted = isAssistedExercise(existing.name);
+    if (
+      input.weight !== undefined &&
+      !weightFitsExercise(input.weight, assisted)
+    ) {
+      throw invalidWeightSign(assisted);
+    }
 
     await tx
       .update(workoutSets)

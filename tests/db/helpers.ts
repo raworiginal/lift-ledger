@@ -47,11 +47,14 @@ export async function deleteUser(db: WorkoutDb, id: string) {
   await db.delete(user).where(eq(user.id, id));
 }
 
-export async function createExercise(db: WorkoutDb): Promise<string> {
+export async function createExercise(
+  db: WorkoutDb,
+  nameEn?: string,
+): Promise<string> {
   const id = `test-exercise-${randomUUID()}`;
   await db.insert(exercises).values({
     id,
-    nameEn: `Test ${id}`,
+    nameEn: nameEn ?? `Test ${id}`,
     nameDe: `Test ${id}`,
     nameEs: `Test ${id}`,
     descriptionEn: "Test exercise",
