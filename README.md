@@ -77,7 +77,7 @@ Run migrations as a release/deploy step, not in the application build. Set `NUXT
 `docker-compose.yml` runs two services:
 
 - `db`: PostgreSQL 17 with the named volume `postgres-data`. It listens on `127.0.0.1:5432` only.
-- `app`: the Nuxt Node server, built from the `Dockerfile` and listening on `127.0.0.1:3000`.
+- `app`: the Nuxt Node server, listening on port `4545` inside the container. The development Compose file maps it to `localhost:3000`; `compose.prod.yml` maps it to `127.0.0.1:4545`.
 
 When `NUXT_RUN_STARTUP_TASKS=true` (set in both compose files), the app prepares its own database before it serves requests. On every start it:
 
@@ -87,7 +87,7 @@ When `NUXT_RUN_STARTUP_TASKS=true` (set in both compose files), the app prepares
 
 If any step fails, the app logs the error and exits with a non-zero code. Docker's `restart: unless-stopped` then retries it.
 
-TLS is not handled by this repo. Put a reverse proxy in front of `127.0.0.1:3000` that terminates HTTPS for your domain.
+TLS is not handled by this repo. For production, put a reverse proxy in front of `127.0.0.1:4545` that terminates HTTPS for your domain.
 
 1. Create `.env` from `.env.example`. Set `POSTGRES_PASSWORD`, a `NUXT_APP_SECRET` of at least 32 characters, `NUXT_PUBLIC_SITE_URL` set to your public `https://` URL, and the `ADMIN_*` values. The `DATABASE_URL` in `.env` is for local use; Compose overrides it to point at the `db` container.
 2. Build and start the stack:

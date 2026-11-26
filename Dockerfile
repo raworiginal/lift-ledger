@@ -12,10 +12,10 @@ RUN pnpm build
 FROM node:22.21.1-bookworm-slim AS runtime
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
-ENV PORT=3000
+ENV PORT=4545
 WORKDIR /app
 COPY --from=builder /app/.output ./.output
 USER node
-EXPOSE 3000
+EXPOSE 4545
 WORKDIR /app/.output
 CMD ["node", "server/index.mjs"]
