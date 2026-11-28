@@ -64,7 +64,7 @@ function submit() {
   <li
     class="flex flex-wrap items-center gap-3 rounded-md border border-default px-3 py-2"
   >
-    <template v-if="!editing">
+    <template v-if="!editing || !editable">
       <span class="w-14 text-sm text-muted">Set {{ set.setNumber }}</span>
       <span class="flex-1 font-medium text-highlighted tabular-nums">
         {{ formatSetWeight(set.weight, unit, assisted ?? false) }} ×

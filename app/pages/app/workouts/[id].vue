@@ -28,6 +28,17 @@ const {
   selectedExerciseId,
 } = editor;
 
+const focusedExerciseId = computed(() => {
+  const exercises = detail.value?.exercises ?? [];
+  if (selectedExerciseId.value) {
+    const selectedExists = exercises.some(
+      (group) => group.exerciseId === selectedExerciseId.value,
+    );
+    if (selectedExists) return selectedExerciseId.value;
+  }
+  return exercises[0]?.exerciseId ?? null;
+});
+
 const today = ref("");
 
 onMounted(() => {
@@ -106,6 +117,10 @@ function prefillFor(exerciseId: string) {
 
 function prefillSourceFor(exerciseId: string) {
   return editor.lastSetFor(exerciseId)?.id ?? null;
+}
+
+function focusExercise(exerciseId: string) {
+  editor.selectExercise(exerciseId);
 }
 </script>
 
@@ -199,7 +214,7 @@ function prefillSourceFor(exerciseId: string) {
           :unit="detail.unit"
           :last-time="group.lastTime"
           :editable="canEdit"
-          :highlighted="selectedExerciseId === group.exerciseId"
+          :focused="!canEdit || focusedExerciseId === group.exerciseId"
           :prefill="prefillFor(group.exerciseId)"
           :prefill-source-id="prefillSourceFor(group.exerciseId)"
           :save-state="editor.saveStateFor(group.exerciseId)"
@@ -211,6 +226,7 @@ function prefillSourceFor(exerciseId: string) {
           @save-set="saveEdit"
           @delete-set="deleteSet"
           @remove="editor.removeExercise(group.exerciseId)"
+          @focus="focusExercise(group.exerciseId)"
         />
       </div>
       <p v-else class="text-muted">

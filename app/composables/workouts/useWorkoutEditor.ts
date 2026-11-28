@@ -94,6 +94,10 @@ export function useWorkoutEditor(workoutId: string) {
     return detail.value?.status ?? "draft";
   }
 
+  function selectExercise(exerciseId: string) {
+    selectedExerciseId.value = exerciseId;
+  }
+
   async function mutate(
     action: () => Promise<unknown>,
     fallback: string,
@@ -117,7 +121,7 @@ export function useWorkoutEditor(workoutId: string) {
   }
 
   function addExercise(exerciseId: string) {
-    selectedExerciseId.value = exerciseId;
+    selectExercise(exerciseId);
     return mutate(
       () =>
         $fetch<unknown>(`${basePath}/exercises`, {
@@ -165,7 +169,7 @@ export function useWorkoutEditor(workoutId: string) {
     const attempt = ++attemptCounter;
 
     saves[exerciseId] = { attempt, state: "saving", input, error: null };
-    selectedExerciseId.value = exerciseId;
+    selectExercise(exerciseId);
 
     try {
       await $fetch<unknown>(`${basePath}/sets`, {
@@ -303,6 +307,7 @@ export function useWorkoutEditor(workoutId: string) {
     busy,
     metadata: readonly(metadata),
     selectedExerciseId,
+    selectExercise,
     refresh,
     addExercise,
     removeExercise,
