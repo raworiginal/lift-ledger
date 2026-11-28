@@ -50,8 +50,11 @@ describe("ExerciseGroup", () => {
     expect(card.attributes("tabindex")).toBe("0");
     const summary = wrapper.get(".exercise-summary");
     expect(summary.text()).toContain("Bench Press");
-    expect(summary.text()).toContain("100 lb × 5");
-    expect(summary.text()).toContain("105 lb × 4");
+    expect(summary.text()).toContain("100lb × 5");
+    expect(summary.text()).toContain("105lb × 4");
+    expect(summary.classes()).toContain("flex-col");
+    expect(summary.classes()).toContain("sm:flex-row");
+    expect(wrapper.find(".exercise-summary-sets").exists()).toBe(true);
     expect(wrapper.findAll(".exercise-summary-set")).toHaveLength(2);
     expect(wrapper.text()).not.toContain("Edit");
     expect(wrapper.text()).not.toContain("Delete");
@@ -72,7 +75,7 @@ describe("ExerciseGroup", () => {
 
     await weightInput.setValue("155");
     await wrapper.setProps({ focused: false });
-    expect(wrapper.text()).toContain("100 lb × 5");
+    expect(wrapper.text()).toContain("100lb × 5");
 
     await wrapper.setProps({ focused: true });
     expect(wrapper.get("input").element).toHaveProperty("value", "155");
@@ -84,10 +87,26 @@ describe("ExerciseGroup", () => {
 
     await weightInput.setValue("120");
     await wrapper.setProps({ focused: false });
-    expect(wrapper.text()).toContain("100 lb × 5");
+    expect(wrapper.text()).toContain("100lb × 5");
     expect(wrapper.text()).not.toContain("Save edit");
 
     await wrapper.setProps({ focused: true });
     expect(wrapper.get("input").element).toHaveProperty("value", "120");
+  });
+
+  it("shows compact assisted weights as negatives without extra spacing", async () => {
+    const wrapper = await mountGroup({
+      assisted: true,
+      sets: [
+        { ...loggedSet, weight: "-25" },
+        { ...nextLoggedSet, weight: "0" },
+      ],
+      focused: false,
+    });
+
+    const summary = wrapper.get(".exercise-summary");
+    expect(summary.text()).toContain("-25lb × 5");
+    expect(summary.text()).toContain("Bodyweight × 4");
+    expect(summary.text()).not.toContain("assist");
   });
 });

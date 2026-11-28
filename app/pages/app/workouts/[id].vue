@@ -7,6 +7,10 @@ import ExercisePicker from "~/components/workouts/presentational/ExercisePicker.
 import WorkoutHeader from "~/components/workouts/presentational/WorkoutHeader.vue";
 import { canFinish, nextPrefill } from "~/utils/workout-sets";
 import { localDateString } from "~/utils/workout-dates";
+import { useTrainingPreferences } from "~/composables/preferences/useTrainingPreferences";
+import { useRestTimer } from "~/composables/workouts/useRestTimer";
+import { DEFAULT_TRAINING_PREFERENCES } from "~~/shared/progression/preferences";
+import RestTimer from "~/components/workouts/presentational/RestTimer.vue";
 
 const route = useRoute();
 const workoutId = String(route.params.id);
@@ -17,6 +21,9 @@ if (!workoutIdSchema.safeParse(workoutId).success) {
 
 const editor = useWorkoutEditor(workoutId);
 const exerciseSearch = useExerciseSearch();
+const trainingPreferences = useTrainingPreferences();
+const restTimer = useRestTimer();
+const restTimerOpen = ref(false);
 const {
   detail,
   status,
@@ -41,8 +48,12 @@ const focusedExerciseId = computed(() => {
 
 const today = ref("");
 
+let trainingPreferencesRequest: Promise<unknown> | null = null;
 onMounted(() => {
   today.value = localDateString();
+  trainingPreferencesRequest = trainingPreferences
+    .load()
+    .catch(() => undefined);
 });
 
 const editMode = ref(false);
@@ -81,8 +92,29 @@ async function addExercise(exerciseId: string) {
     ?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
-function saveSet(exerciseId: string, values: { weight: string; reps: string }) {
-  return editor.saveSet(exerciseId, values.weight, values.reps);
+async function saveSet(
+  exerciseId: string,
+  values: { weight: string; reps: string },
+) {
+  const saved = await editor.saveSet(exerciseId, values.weight, values.reps);
+  if (!saved) return false;
+
+  if (trainingPreferencesRequest) await trainingPreferencesRequest;
+  else if (!trainingPreferences.preferences.value) {
+    await trainingPreferences.load();
+  }
+
+  const restTimeSeconds =
+    trainingPreferences.preferences.value?.restTimeSeconds ??
+    DEFAULT_TRAINING_PREFERENCES.restTimeSeconds;
+  restTimer.start(restTimeSeconds);
+  restTimerOpen.value = restTimeSeconds > 0;
+  return true;
+}
+
+function skipRest() {
+  restTimer.skip();
+  restTimerOpen.value = false;
 }
 
 async function saveEdit(
@@ -176,6 +208,14 @@ function focusExercise(exerciseId: string) {
         @discard="confirmOpen = true"
         @start-editing="editMode = true"
         @stop-editing="stopEditing"
+      />
+
+      <RestTimer
+        v-if="restTimer.remainingSeconds.value !== null"
+        :open="restTimerOpen"
+        :remaining-seconds="restTimer.remainingSeconds.value"
+        @update:open="restTimerOpen = $event"
+        @skip="skipRest"
       />
 
       <UAlert

@@ -69,6 +69,7 @@ export interface TrainingPreferences {
   repMax: number;
   unit: WorkoutUnit;
   weightStep: string; // decimal string, like set weight
+  restTimeSeconds: number;
 }
 
 export type ProgressionStatus = "ready" | "building" | "below" | "stalled";

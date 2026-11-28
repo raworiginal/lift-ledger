@@ -1,0 +1,2 @@
+ALTER TABLE "training_preferences" ADD COLUMN "rest_time_seconds" integer DEFAULT 120 NOT NULL;--> statement-breakpoint
+ALTER TABLE "training_preferences" ADD CONSTRAINT "training_preferences_rest_time_check" CHECK ("training_preferences"."rest_time_seconds" >= 0 and "training_preferences"."rest_time_seconds" <= 3600);

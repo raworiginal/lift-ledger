@@ -21,6 +21,8 @@ const fields = reactive({
   repMax: String(props.preferences.repMax),
   unit: props.preferences.unit,
   weightStep: props.preferences.weightStep,
+  restMinutes: String(Math.floor(props.preferences.restTimeSeconds / 60)),
+  restSeconds: String(props.preferences.restTimeSeconds % 60),
 });
 
 watch(
@@ -30,6 +32,8 @@ watch(
     fields.repMax = String(preferences.repMax);
     fields.unit = preferences.unit;
     fields.weightStep = preferences.weightStep;
+    fields.restMinutes = String(Math.floor(preferences.restTimeSeconds / 60));
+    fields.restSeconds = String(preferences.restTimeSeconds % 60);
   },
 );
 
@@ -38,6 +42,7 @@ const parsed = computed(() => ({
   repMax: Number(fields.repMax),
   unit: fields.unit,
   weightStep: fields.weightStep,
+  restTimeSeconds: Number(fields.restMinutes) * 60 + Number(fields.restSeconds),
 }));
 
 const unitItems: Array<{ label: string; value: WorkoutUnit }> = [
@@ -109,6 +114,39 @@ function handleSubmit(event: FormSubmitEvent<TrainingPreferences>) {
         autocomplete="off"
         class="w-full"
       />
+    </UFormField>
+
+    <UFormField
+      label="Default rest time"
+      name="restTimeSeconds"
+      description="Set to 0 seconds to turn off the rest timer."
+    >
+      <div class="flex items-center gap-2">
+        <UInput
+          v-model="fields.restMinutes"
+          type="number"
+          name="restMinutes"
+          inputmode="numeric"
+          min="0"
+          max="60"
+          step="1"
+          aria-label="Rest time minutes"
+          class="w-24"
+        />
+        <span class="text-sm text-muted">min</span>
+        <UInput
+          v-model="fields.restSeconds"
+          type="number"
+          name="restSeconds"
+          inputmode="numeric"
+          min="0"
+          max="59"
+          step="1"
+          aria-label="Rest time seconds"
+          class="w-24"
+        />
+        <span class="text-sm text-muted">sec</span>
+      </div>
     </UFormField>
 
     <UButton type="submit" :loading="saving" :disabled="saving">

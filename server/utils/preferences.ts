@@ -16,6 +16,7 @@ export async function getTrainingPreferences(
       repMax: trainingPreferences.repMax,
       unit: trainingPreferences.unit,
       weightStep: trainingPreferences.weightStep,
+      restTimeSeconds: trainingPreferences.restTimeSeconds,
     })
     .from(trainingPreferences)
     .where(eq(trainingPreferences.userId, userId))
@@ -34,6 +35,7 @@ export async function saveTrainingPreferences(
     repMax: input.repMax,
     unit: input.unit,
     weightStep: input.weightStep,
+    restTimeSeconds: input.restTimeSeconds,
   };
   const [row] = await db
     .insert(trainingPreferences)
@@ -47,6 +49,7 @@ export async function saveTrainingPreferences(
       repMax: trainingPreferences.repMax,
       unit: trainingPreferences.unit,
       weightStep: trainingPreferences.weightStep,
+      restTimeSeconds: trainingPreferences.restTimeSeconds,
     });
 
   if (!row) throw new Error("Training preferences were not saved.");

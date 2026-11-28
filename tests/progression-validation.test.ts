@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { trainingPreferencesSchema } from "../shared/validation/progression";
 
-const valid = { repMin: 8, repMax: 12, unit: "lb", weightStep: "5" };
+const valid = {
+  repMin: 8,
+  repMax: 12,
+  unit: "lb",
+  weightStep: "5",
+  restTimeSeconds: 120,
+};
 
 function accepts(value: unknown) {
   return trainingPreferencesSchema.safeParse(value).success;
@@ -38,6 +44,14 @@ test("training preferences reject a weight step of zero or less", () => {
 
 test("training preferences reject weight steps with more than two decimals", () => {
   assert.equal(accepts({ ...valid, weightStep: "2.125" }), false);
+});
+
+test("training preferences accept rest times from zero to one hour", () => {
+  assert.equal(accepts({ ...valid, restTimeSeconds: 0 }), true);
+  assert.equal(accepts({ ...valid, restTimeSeconds: 3600 }), true);
+  assert.equal(accepts({ ...valid, restTimeSeconds: -1 }), false);
+  assert.equal(accepts({ ...valid, restTimeSeconds: 3601 }), false);
+  assert.equal(accepts({ ...valid, restTimeSeconds: 1.5 }), false);
 });
 
 test("training preferences reject an unknown unit", () => {

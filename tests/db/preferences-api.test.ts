@@ -48,12 +48,14 @@ test("the first save inserts a row and a second save updates it", async () => {
     repMax: 10,
     unit: "kg",
     weightStep: "2.50",
+    restTimeSeconds: 90,
   });
   assert.deepEqual(inserted, {
     repMin: 6,
     repMax: 10,
     unit: "kg",
     weightStep: "2.50",
+    restTimeSeconds: 90,
   });
 
   const updated = await saveTrainingPreferences(db, userId, {
@@ -61,6 +63,7 @@ test("the first save inserts a row and a second save updates it", async () => {
     repMax: 15,
     unit: "lb",
     weightStep: "10",
+    restTimeSeconds: 180,
   });
   assert.equal(updated.repMin, 5);
 
@@ -71,6 +74,7 @@ test("the first save inserts a row and a second save updates it", async () => {
   assert.equal(rows.length, 1);
   assert.equal(rows[0]?.repMax, 15);
   assert.equal(rows[0]?.unit, "lb");
+  assert.equal(rows[0]?.restTimeSeconds, 180);
 
   assert.deepEqual(await getTrainingPreferences(db, userId), updated);
 });
@@ -84,6 +88,7 @@ test("users cannot read or change each other's preferences", async () => {
     repMax: 6,
     unit: "kg",
     weightStep: "1.25",
+    restTimeSeconds: 60,
   });
 
   assert.deepEqual(
@@ -96,6 +101,7 @@ test("users cannot read or change each other's preferences", async () => {
     repMax: 20,
     unit: "lb",
     weightStep: "2.5",
+    restTimeSeconds: 150,
   });
 
   assert.deepEqual(await getTrainingPreferences(db, owner), {
@@ -103,6 +109,7 @@ test("users cannot read or change each other's preferences", async () => {
     repMax: 6,
     unit: "kg",
     weightStep: "1.25",
+    restTimeSeconds: 60,
   });
 });
 
@@ -113,6 +120,7 @@ test("deleting the user removes the preferences row", async () => {
     repMax: 12,
     unit: "lb",
     weightStep: "5",
+    restTimeSeconds: 120,
   });
 
   await deleteUser(db, userId);

@@ -22,6 +22,7 @@ export const trainingPreferences = pgTable(
     weightStep: numeric("weight_step", { precision: 5, scale: 2 })
       .notNull()
       .default("5"),
+    restTimeSeconds: integer("rest_time_seconds").notNull().default(120),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -34,6 +35,10 @@ export const trainingPreferences = pgTable(
     check(
       "training_preferences_weight_step_check",
       sql`${table.weightStep} > 0`,
+    ),
+    check(
+      "training_preferences_rest_time_check",
+      sql`${table.restTimeSeconds} >= 0 and ${table.restTimeSeconds} <= 3600`,
     ),
   ],
 );

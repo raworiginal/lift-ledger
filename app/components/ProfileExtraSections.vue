@@ -19,7 +19,7 @@ async function handleSubmit(values: TrainingPreferences) {
   <div class="flex flex-col gap-4 p-4">
     <Fieldset title="Training">
       <p class="text-sm text-muted">
-        Your rep range, main unit, and weight step apply to every exercise.
+        Set your default rest time and training preferences for every exercise.
       </p>
 
       <div

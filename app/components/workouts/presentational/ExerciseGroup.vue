@@ -5,7 +5,6 @@ import type {
   WorkoutSet,
   WorkoutUnit,
 } from "~~/shared/types/workouts";
-import { formatSetWeight } from "~/utils/format-weight";
 import { formatWorkoutDate } from "~/utils/workout-dates";
 import LastTimeSummary from "./LastTimeSummary.vue";
 import SetEntryForm from "./SetEntryForm.vue";
@@ -41,6 +40,14 @@ const emit = defineEmits<{
 function focusCard() {
   if (!props.focused) emit("focus");
 }
+
+function formatCompactSetWeight(weight: string) {
+  const value = Number(weight);
+  if (props.assisted && value === 0) return "Bodyweight";
+
+  const formattedValue = props.assisted ? `-${Math.abs(value)}` : String(value);
+  return `${formattedValue}${props.unit}`;
+}
 </script>
 
 <template>
@@ -57,19 +64,22 @@ function focusCard() {
       <div class="flex items-center justify-between gap-3">
         <div
           v-if="!focused"
-          class="exercise-summary flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1"
+          class="exercise-summary flex min-w-0 flex-1 flex-col items-start gap-y-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2"
         >
           <h2 class="font-semibold text-highlighted">{{ name }}</h2>
           <template v-if="sets.length">
-            <span
-              v-for="set in sets"
-              :key="set.id"
-              class="exercise-summary-set inline-flex items-center gap-2 text-sm tabular-nums text-highlighted"
+            <div
+              class="exercise-summary-sets flex flex-wrap items-center gap-x-2 gap-y-1"
             >
-              <span class="text-muted" aria-hidden="true">·</span>
-              {{ formatSetWeight(set.weight, unit, assisted ?? false) }} ×
-              {{ set.reps }}
-            </span>
+              <span
+                v-for="set in sets"
+                :key="set.id"
+                class="exercise-summary-set inline-flex items-center gap-2 text-sm tabular-nums text-highlighted"
+              >
+                <span class="text-muted" aria-hidden="true">·</span>
+                {{ formatCompactSetWeight(set.weight) }} × {{ set.reps }}
+              </span>
+            </div>
           </template>
           <span v-else class="text-sm text-muted">No sets yet.</span>
         </div>

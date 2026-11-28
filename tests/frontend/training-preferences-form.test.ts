@@ -8,7 +8,13 @@ type Props = InstanceType<typeof TrainingPreferencesForm>["$props"];
 function mountForm(overrides: Partial<Props> = {}) {
   return mountSuspended(TrainingPreferencesForm, {
     props: {
-      preferences: { repMin: 8, repMax: 12, unit: "lb", weightStep: "5" },
+      preferences: {
+        repMin: 8,
+        repMax: 12,
+        unit: "lb",
+        weightStep: "5",
+        restTimeSeconds: 120,
+      },
       saving: false,
       ...overrides,
     },
@@ -63,7 +69,27 @@ describe("TrainingPreferencesForm", () => {
     await submit(wrapper);
 
     expect(wrapper.emitted("submit")).toEqual([
-      [{ repMin: 10, repMax: 15, unit: "lb", weightStep: "2.5" }],
+      [
+        {
+          repMin: 10,
+          repMax: 15,
+          unit: "lb",
+          weightStep: "2.5",
+          restTimeSeconds: 120,
+        },
+      ],
     ]);
+  });
+
+  it("saves the rest time from minutes and seconds", async () => {
+    const wrapper = await mountForm();
+
+    await input(wrapper, "restMinutes").setValue("1");
+    await input(wrapper, "restSeconds").setValue("30");
+    await submit(wrapper);
+
+    expect(wrapper.emitted("submit")?.[0]?.[0]).toMatchObject({
+      restTimeSeconds: 90,
+    });
   });
 });

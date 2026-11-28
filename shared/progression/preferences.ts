@@ -5,4 +5,5 @@ export const DEFAULT_TRAINING_PREFERENCES: TrainingPreferences = {
   repMax: 12,
   unit: "lb",
   weightStep: "5",
+  restTimeSeconds: 120,
 };
